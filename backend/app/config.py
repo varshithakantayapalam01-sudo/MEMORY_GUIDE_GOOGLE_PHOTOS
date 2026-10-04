@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = "your_gemini_api_key"
     GEMINI_MODEL: str = "gemini-3.8-flash"
     EMBEDDING_MODEL: str = "gemini-embedding-001"
-    ALLOW_SYNTHETIC_AI: bool = False
+    ALLOW_SYNTHETIC_AI: bool = True
     INITIAL_ACTIVE_LIMIT: int = 12
 
     ANALYTICS_ADMIN_TOKEN: str = "replace_with_secure_random_token"

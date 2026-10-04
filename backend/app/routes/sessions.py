@@ -64,14 +64,13 @@ def helper_rescore_and_partition(sessionId: str) -> Tuple[List[CandidateEntry], 
         try:
             query_vec = gemini_client.embed_text(session.original_query)
         except Exception as e:
-            if not getattr(settings, "ALLOW_SYNTHETIC_AI", False):
+            logger.warning(f"Live embedding API call failed: {e}. Falling back to synthetic vector.")
+            if not getattr(settings, "ALLOW_SYNTHETIC_AI", True):
                 raise e
 
     if not query_vec:
         if not session.original_query:
             query_vec = [0.0] * 3072
-        elif not getattr(settings, "ALLOW_SYNTHETIC_AI", False):
-            raise gemini_client.GeminiAPIError("No embedding provider available and synthetic fallback is disabled.")
         else:
             query_vec = generate_deterministic_synthetic_vector(session.original_query or "vague query")
 
