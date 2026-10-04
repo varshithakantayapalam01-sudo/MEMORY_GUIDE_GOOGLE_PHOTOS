@@ -7,7 +7,7 @@ from app.config import settings
 from app.models.image import ImageProfile
 from app.services import gemini_client, session_manager, image_understanding_service
 from app.services.search_document import build_search_document
-from scripts.generate_demo_embeddings import generate_deterministic_synthetic_vector
+from app.services.synthetic_vectors import generate_deterministic_synthetic_vector
 
 logger = logging.getLogger("memory_guide.embedding_service")
 

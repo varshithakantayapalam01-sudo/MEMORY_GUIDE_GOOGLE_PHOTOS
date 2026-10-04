@@ -30,7 +30,7 @@ from app.services import (
     answer_interpreter,
     analytics_db,
 )
-from scripts.generate_demo_embeddings import generate_deterministic_synthetic_vector
+from app.services.synthetic_vectors import generate_deterministic_synthetic_vector
 
 router = APIRouter()
 
