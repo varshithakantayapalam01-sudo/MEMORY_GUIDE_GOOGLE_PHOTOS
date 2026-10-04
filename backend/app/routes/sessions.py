@@ -359,58 +359,72 @@ async def query_initial_description(sessionId: str, payload: QueryRequest):
         session_manager.add_clue(sessionId, clue)
         session.dimensions_provided_by_user.add(clue.dimension)
 
-    # Initial rescore & pool partitioning
     try:
-        active_entries, reserve_entries = helper_rescore_and_partition(sessionId)
-    except gemini_client.GeminiAPIError as e:
+        # Initial rescore & pool partitioning
+        try:
+            active_entries, reserve_entries = helper_rescore_and_partition(sessionId)
+        except gemini_client.GeminiAPIError as e:
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content=APIResponse(
+                    success=False,
+                    data=None,
+                    error={"code": "EMBEDDING_PROVIDER_ERROR", "message": f"Embedding provider error and synthetic fallback is disabled: {str(e)}"},
+                ).model_dump(),
+            )
+
+        # Record CandidateHistoryEntry
+        session.candidate_history.append(CandidateHistoryEntry(
+            round=0,
+            trigger="initial_retrieval",
+            active_count=len(active_entries),
+            reserve_count=len(reserve_entries),
+            rejected_count=len(session.explicitly_rejected_ids),
+        ))
+
+        session.retrieval_status = "in_progress"
+
+        # Select next question via Discrimination Engine
+        selection = discrimination.select_next_best_question(session)
+
+        # Determine whether to ask question or show candidates
+        if selection and len(active_entries) > 6 and session.round_count < MAX_ROUNDS:
+            session.round_count = 1
+            question = question_generator.generate_clarification_question(selection, session.round_count)
+            session.current_question = question
+
+            return APIResponse(
+                success=True,
+                data={
+                    "action": "ask_question",
+                    "question": {
+                        "questionId": question.question_id,
+                        "round": question.round,
+                        "text": question.text,
+                        "options": question.options,
+                        "dimensionTested": question.dimension_tested,
+                        "subattributeKey": question.subattribute_key,
+                    },
+                    "progress": {
+                        "activeCandidates": len(active_entries),
+                        "reserveCandidates": len(reserve_entries),
+                        "round": session.round_count,
+                    },
+                },
+                error=None,
+            )
+
+        # Show Recognition Candidates
+        return build_recognition_candidate_response(sessionId, active_entries, reserve_entries, session.round_count)
+    except Exception as e:
+        logger.error(f"Error in query_initial_description for session {sessionId}: {e}", exc_info=True)
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content=APIResponse(
                 success=False,
                 data=None,
-                error={"code": "EMBEDDING_PROVIDER_ERROR", "message": f"Embedding provider error and synthetic fallback is disabled: {str(e)}"},
+                error={"code": "QUERY_ERROR", "message": f"Query processing failed: {str(e)}"},
             ).model_dump(),
-        )
-
-    # Record CandidateHistoryEntry
-    session.candidate_history.append(CandidateHistoryEntry(
-        round=0,
-        trigger="initial_retrieval",
-        active_count=len(active_entries),
-        reserve_count=len(reserve_entries),
-        rejected_count=len(session.explicitly_rejected_ids),
-    ))
-
-    session.retrieval_status = "in_progress"
-
-    # Select next question via Discrimination Engine
-    selection = discrimination.select_next_best_question(session)
-
-    # Determine whether to ask question or show candidates
-    if selection and len(active_entries) > 6 and session.round_count < MAX_ROUNDS:
-        session.round_count = 1
-        question = question_generator.generate_clarification_question(selection, session.round_count)
-        session.current_question = question
-
-        return APIResponse(
-            success=True,
-            data={
-                "action": "ask_question",
-                "question": {
-                    "questionId": question.question_id,
-                    "round": question.round,
-                    "text": question.text,
-                    "options": question.options,
-                    "dimensionTested": question.dimension_tested,
-                    "subattributeKey": question.subattribute_key,
-                },
-                "progress": {
-                    "activeCandidates": len(active_entries),
-                    "reserveCandidates": len(reserve_entries),
-                    "round": session.round_count,
-                },
-            },
-            error=None,
         )
 def build_recognition_candidate_response(sessionId: str, active_entries: List[CandidateEntry], reserve_entries: List[CandidateEntry], round_count: int) -> APIResponse:
     """Formats top 3-6 recognition candidates from the latest complete non-rejected ranking (active + reserve)."""

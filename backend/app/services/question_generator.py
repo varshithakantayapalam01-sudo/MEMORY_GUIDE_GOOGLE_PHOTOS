@@ -3,6 +3,7 @@ import uuid
 import json
 import logging
 from typing import List, Tuple
+from google.genai import types
 from app.config import settings
 from app.models.question import QuestionSelection, ClarificationQuestion
 from app.services import gemini_client
@@ -146,10 +147,14 @@ Rules:
   "options": ["Indoors", "Outdoors", "I don't remember"]
 }}
 """
+            config = types.GenerateContentConfig(
+                temperature=0.1,
+                response_mime_type="application/json",
+            )
             response = client.models.generate_content(
                 model=settings.GEMINI_MODEL,
                 contents=[prompt],
-                config={"temperature": 0.1, "response_mime_type": "application/json"},
+                config=config,
             )
             if response and response.text:
                 raw_text = response.text.strip()

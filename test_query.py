@@ -31,8 +31,14 @@ upload_req = urllib.request.Request(url, data=body, headers={
 
 with urllib.request.urlopen(upload_req) as resp:
     print('Upload Status:', resp.status)
+    print('Upload Body:', resp.read().decode('utf-8'))
 
-# 3. Query
+# 3. Check profiles
+profiles_url = f'{base_url}/sessions/{session_id}/profiles'
+with urllib.request.urlopen(profiles_url) as resp:
+    print('Profiles:', resp.read().decode('utf-8'))
+
+# 4. Query
 query_url = f'{base_url}/sessions/{session_id}/query'
 query_req = urllib.request.Request(query_url, data=json.dumps({'query': 'cake'}).encode('utf-8'), headers={'Content-Type': 'application/json'})
 
@@ -43,5 +49,3 @@ try:
 except urllib.error.HTTPError as e:
     print('HTTP Error on Query:', e.code)
     print('Error Body:', e.read().decode('utf-8'))
-except Exception as e:
-    print('Error on Query:', e)
