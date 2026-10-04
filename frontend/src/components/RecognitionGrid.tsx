@@ -10,6 +10,16 @@ interface RecognitionGridProps {
   loading: boolean;
 }
 
+const getFullImageUrl = (url: string) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://memoryguidegooglephotos-production.up.railway.app/api/v1';
+  const origin = apiBase.replace(/\/api\/v1\/?$/, '');
+  return `${origin}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 export default function RecognitionGrid({
   candidates,
   onSelectFound,
@@ -38,7 +48,7 @@ export default function RecognitionGrid({
           <div key={cand.imageId} className="photo-card" id={`photo-card-${cand.imageId}`}>
             <div className="photo-img-wrapper">
               <img
-                src={cand.imageUrl}
+                src={getFullImageUrl(cand.imageUrl)}
                 alt={`Candidate photo ${idx + 1}`}
                 className="photo-img"
                 onError={(e) => {

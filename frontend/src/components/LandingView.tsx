@@ -11,6 +11,9 @@ export default function LandingView({ onStartDemo, onStartResearch, loading }: L
     <div className="card-container">
       <div className="hero-grid">
         <div>
+          <div style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 600, marginBottom: '0.5rem', letterSpacing: '0.02em' }}>
+            Google Photos • Core Experience Concept
+          </div>
           <span className="mode-badge" style={{ marginBottom: '1rem', display: 'inline-block' }}>
             Guided Photo Retrieval Engine
           </span>
@@ -18,8 +21,8 @@ export default function LandingView({ onStartDemo, onStartResearch, loading }: L
             Find the photo you remember — even when you can't describe it perfectly.
           </h1>
           <p className="subtitle">
-            Tell Memory Guide what you remember. Instead of making you guess what to search next,
-            it studies the remaining photos and asks the clue most likely to narrow them down.
+            Google Photos holds thousands of memories, but vague queries often fail. Tell Memory Guide what you remember.
+            Instead of making you guess keywords, it analyzes candidate photos and asks adaptive questions to narrow them down.
           </p>
 
           <div className="hero-actions">

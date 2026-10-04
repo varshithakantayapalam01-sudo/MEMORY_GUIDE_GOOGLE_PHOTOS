@@ -12,8 +12,15 @@ export default function Navbar({ mode, onReset, showDebug, onToggleDebug }: Navb
     <header className="app-header">
       <div className="logo-group" onClick={onReset} style={{ cursor: 'pointer' }}>
         <div className="logo-icon">M</div>
-        <span>Memory Guide</span>
-        {mode && <span className="mode-badge">{mode.toUpperCase()} MODE</span>}
+        <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span>Memory Guide</span>
+            {mode && <span className="mode-badge">{mode.toUpperCase()} MODE</span>}
+          </div>
+          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+            Google Photos • Core Experience Concept
+          </span>
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>

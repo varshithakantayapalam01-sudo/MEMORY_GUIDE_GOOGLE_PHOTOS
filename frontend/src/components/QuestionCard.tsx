@@ -45,7 +45,7 @@ export default function QuestionCard({
 
       {/* Narrowing Progress Header */}
       <div className="progress-banner">
-        <span>Narrowing Candidates</span>
+        <span>Candidate Progress:</span>
         <div className="progress-steps">
           {narrowingHistory.map((count, idx) => (
             <span key={idx} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -56,7 +56,7 @@ export default function QuestionCard({
                   fontWeight: idx === narrowingHistory.length - 1 ? 700 : 500,
                 }}
               >
-                {count}
+                {count} {idx === 0 ? 'possible photos' : ''}
               </span>
             </span>
           ))}
@@ -96,7 +96,7 @@ export default function QuestionCard({
       <div className="question-card">
         <div className="question-callout">
           <span>🧠</span>
-          <span>Memory Guide chose this question based on the photos still in consideration.</span>
+          <span style={{ fontSize: '0.85rem' }}>Chosen based on the photos still in consideration.</span>
         </div>
 
         <h2 className="question-text">{question.text}</h2>

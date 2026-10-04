@@ -65,7 +65,7 @@ export interface StepResponseData {
   summary?: FoundSummary;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://memoryguidegooglephotos-production.up.railway.app/api/v1';
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
