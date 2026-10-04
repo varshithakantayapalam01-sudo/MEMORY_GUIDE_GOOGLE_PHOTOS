@@ -1,8 +1,11 @@
 from __future__ import annotations
+import logging
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
 from fastapi import APIRouter, status, UploadFile, File, Header
 from fastapi.responses import JSONResponse
+
+logger = logging.getLogger("memory_guide.sessions_route")
 
 from app.models.api import (
     CreateSessionRequest,
@@ -64,6 +67,8 @@ def helper_rescore_and_partition(sessionId: str) -> Tuple[List[CandidateEntry], 
         try:
             query_vec = gemini_client.embed_text(session.original_query)
         except Exception as e:
+            if not settings.ALLOW_SYNTHETIC_AI:
+                raise e
             logger.warning(f"Live embedding API call failed: {e}. Falling back to synthetic vector.")
             query_vec = None
 
