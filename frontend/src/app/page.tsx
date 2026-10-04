@@ -103,11 +103,12 @@ export default function HomePage() {
   // Upload Research Photos
   const handleUploadPhotos = async (files: File[]) => {
     let currSessionId = sessionId;
-    if (!currSessionId) {
+    if (!currSessionId || mode === 'demo') {
       const sessRes = await createSession('research');
       if (sessRes.data) {
         currSessionId = sessRes.data.sessionId;
         setSessionId(currSessionId);
+        setMode('research');
       }
     }
     if (!currSessionId) return;
@@ -120,6 +121,9 @@ export default function HomePage() {
         setUploadedCount(res.data.imageCount || files.length);
         setUploadStatus('ready');
         setMode('research');
+      } else if (res.error) {
+        alert(res.error.message);
+        setUploadStatus('error');
       }
     } catch (err: any) {
       setUploadStatus('error');
@@ -132,7 +136,7 @@ export default function HomePage() {
   const handleSubmitQuery = async (query: string) => {
     let currSessionId = sessionId;
     if (!currSessionId) {
-      const sessRes = await createSession('demo');
+      const sessRes = await createSession(mode);
       if (sessRes.data) {
         currSessionId = sessRes.data.sessionId;
         setSessionId(currSessionId);
@@ -162,14 +166,15 @@ export default function HomePage() {
 
     setLoading(true);
     try {
-      const res = await submitQuery(currSessionId, query);
+      const res = await submitQuery(currSessionId, query, mode);
       if (res.success && res.data) {
         const stepData = res.data;
+        const startCount = mode === 'research' ? uploadedCount : 29;
         if (stepData.progress) {
           setProgress(stepData.progress);
-          setNarrowingHistory([29, stepData.progress.activeCandidates]);
+          setNarrowingHistory([startCount, stepData.progress.activeCandidates]);
         } else {
-          setNarrowingHistory([29, 12]);
+          setNarrowingHistory([startCount, Math.min(12, startCount)]);
         }
         if (stepData.selectionMetadata) {
           setSelectionMetadata(stepData.selectionMetadata);
@@ -182,6 +187,8 @@ export default function HomePage() {
           setCandidates(stepData.candidates);
           setPanelStep('recognition');
         }
+      } else if (res.error) {
+        alert(res.error.message);
       }
     } catch (err: any) {
       console.warn("Query handling error:", err);
@@ -207,7 +214,7 @@ export default function HomePage() {
     }
 
     try {
-      const res = await submitAnswer(sessionId, answerText);
+      const res = await submitAnswer(sessionId, answerText, mode);
       if (res.success && res.data) {
         const stepData = res.data;
 
@@ -226,6 +233,8 @@ export default function HomePage() {
           setCandidates(stepData.candidates);
           setPanelStep('recognition');
         }
+      } else if (res.error) {
+        alert(res.error.message);
       }
     } catch (err: any) {
       console.warn("Answer error:", err);
@@ -240,12 +249,14 @@ export default function HomePage() {
     setLoading(true);
     setSelectedImageId(imageId);
     try {
-      const res = await selectCandidate(sessionId, { selectionType: 'found', imageId });
+      const res = await selectCandidate(sessionId, { selectionType: 'found', imageId }, mode);
       if (res.success && res.data) {
         if (res.data.summary) {
           setFoundSummary(res.data.summary);
         }
         setPanelStep('found');
+      } else if (res.error) {
+        alert(res.error.message);
       }
     } catch (err: any) {
       console.warn("Select found error:", err);
@@ -260,7 +271,7 @@ export default function HomePage() {
     setLoading(true);
     setReferenceBanner(`Using candidate '${imageId}' as visual reference to narrow search…`);
     try {
-      const res = await selectCandidate(sessionId, { selectionType: 'close', imageId });
+      const res = await selectCandidate(sessionId, { selectionType: 'close', imageId }, mode);
       if (res.success && res.data) {
         const stepData = res.data;
         if (stepData.progress) {
@@ -278,6 +289,8 @@ export default function HomePage() {
           setCandidates(stepData.candidates);
           setPanelStep('recognition');
         }
+      } else if (res.error) {
+        alert(res.error.message);
       }
     } catch (err: any) {
       console.warn("Select close error:", err);
@@ -291,7 +304,7 @@ export default function HomePage() {
     setLoading(true);
     const rejectedIds = candidates.map((c) => c.imageId);
     try {
-      const res = await selectCandidate(sessionId, { selectionType: 'none', rejectedImageIds: rejectedIds });
+      const res = await selectCandidate(sessionId, { selectionType: 'none', rejectedImageIds: rejectedIds }, mode);
       if (res.success && res.data) {
         const stepData = res.data;
         if (stepData.progress) {
@@ -309,6 +322,8 @@ export default function HomePage() {
           setCandidates(stepData.candidates);
           setPanelStep('recognition');
         }
+      } else if (res.error) {
+        alert(res.error.message);
       }
     } catch (err: any) {
       console.warn("Select none error:", err);
@@ -355,6 +370,8 @@ export default function HomePage() {
         <PhotoLibraryGrid
           activeCandidateIds={activeCandidateIds}
           isGuideActive={isGuideActive && panelStep !== 'memory_input'}
+          mode={mode}
+          uploadedCount={uploadedCount}
         />
 
         {/* Right Memory Guide AI Panel */}
@@ -382,6 +399,9 @@ export default function HomePage() {
             selectionMetadata={selectionMetadata}
             showDebug={showDebug}
             onToggleDebug={() => setShowDebug(!showDebug)}
+            mode={mode}
+            uploadedCount={uploadedCount}
+            sessionId={sessionId}
           />
         )}
       </div>

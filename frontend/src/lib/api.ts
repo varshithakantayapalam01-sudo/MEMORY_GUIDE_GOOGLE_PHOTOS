@@ -75,14 +75,24 @@ export interface StepResponseData {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://memoryguidegooglephotos-production.up.railway.app/api/v1';
 
-function resolveCandidateImageUrls(data: StepResponseData): StepResponseData {
+function resolveCandidateImageUrls(data: StepResponseData, mode: 'demo' | 'research' = 'demo', sessionId?: string): StepResponseData {
   if (data.candidates) {
     data.candidates = data.candidates.map(c => {
-      const match = DEMO_PHOTOS.find(dp => dp.image_id === c.imageId);
-      if (match) {
-        return { ...c, imageUrl: match.image_url };
+      if (mode === 'demo') {
+        const match = DEMO_PHOTOS.find(dp => dp.image_id === c.imageId);
+        if (match) {
+          return { ...c, imageUrl: match.image_url };
+        }
+        return c;
+      } else {
+        let imgUrl = c.imageUrl;
+        if (!imgUrl || !imgUrl.startsWith('http')) {
+          const path = (imgUrl && imgUrl.startsWith('/')) ? imgUrl : `/api/v1/sessions/${sessionId}/images/${c.imageId}`;
+          const baseUrl = API_BASE_URL.replace(/\/api\/v1\/?$/, '');
+          imgUrl = `${baseUrl}${path}`;
+        }
+        return { ...c, imageUrl: imgUrl };
       }
-      return c;
     });
   }
   return data;
@@ -120,7 +130,14 @@ export async function createSession(mode: 'demo' | 'research'): Promise<APIRespo
     });
     return await handleResponse(res);
   } catch (err) {
-    console.warn("Backend unavailable, using client demo fallback session:", err);
+    console.warn("Backend unavailable, using fallback strategy:", err);
+    if (mode === 'research') {
+      return {
+        success: false,
+        data: null,
+        error: { code: 'BACKEND_UNAVAILABLE', message: "We couldn't search your uploaded photos. Please try again." }
+      };
+    }
     const fallbackId = createFallbackSession(mode);
     return {
       success: true,
@@ -139,16 +156,22 @@ export async function uploadPhotos(sessionId: string, files: File[]): Promise<AP
     });
     return await handleResponse(res);
   } catch (err: any) {
+    console.error("Upload error:", err);
     return {
-      success: true,
-      data: { uploadedCount: files.length, imageCount: files.length, status: 'ready', message: 'Uploaded successfully (local session)' }
+      success: false,
+      data: null,
+      error: { code: 'UPLOAD_FAILED', message: "Failed to upload photos to backend. Please check network connection." }
     };
   }
 }
 
-export async function submitQuery(sessionId: string, query: string): Promise<APIResponse<StepResponseData>> {
-  if (sessionId.startsWith('fallback_sess_')) {
-    return { success: true, data: resolveCandidateImageUrls(handleFallbackQuery(sessionId, query)) };
+export async function submitQuery(
+  sessionId: string,
+  query: string,
+  mode: 'demo' | 'research' = 'demo'
+): Promise<APIResponse<StepResponseData>> {
+  if (mode === 'demo' && sessionId.startsWith('fallback_sess_')) {
+    return { success: true, data: resolveCandidateImageUrls(handleFallbackQuery(sessionId, query), 'demo', sessionId) };
   }
   try {
     const res = await fetch(`${API_BASE_URL}/sessions/${sessionId}/query`, {
@@ -158,18 +181,29 @@ export async function submitQuery(sessionId: string, query: string): Promise<API
     });
     const parsed = await handleResponse<APIResponse<StepResponseData>>(res);
     if (parsed.data) {
-      parsed.data = resolveCandidateImageUrls(parsed.data);
+      parsed.data = resolveCandidateImageUrls(parsed.data, mode, sessionId);
     }
     return parsed;
   } catch (err) {
-    console.warn("API query failed, falling back to local demo engine:", err);
-    return { success: true, data: resolveCandidateImageUrls(handleFallbackQuery(sessionId, query)) };
+    console.warn("API query failed:", err);
+    if (mode === 'research') {
+      return {
+        success: false,
+        data: null,
+        error: { code: 'RESEARCH_QUERY_ERROR', message: "We couldn't search your uploaded photos. Please try again." }
+      };
+    }
+    return { success: true, data: resolveCandidateImageUrls(handleFallbackQuery(sessionId, query), 'demo', sessionId) };
   }
 }
 
-export async function submitAnswer(sessionId: string, answerText: string): Promise<APIResponse<StepResponseData>> {
-  if (sessionId.startsWith('fallback_sess_')) {
-    return { success: true, data: resolveCandidateImageUrls(handleFallbackAnswer(sessionId, answerText)) };
+export async function submitAnswer(
+  sessionId: string,
+  answerText: string,
+  mode: 'demo' | 'research' = 'demo'
+): Promise<APIResponse<StepResponseData>> {
+  if (mode === 'demo' && sessionId.startsWith('fallback_sess_')) {
+    return { success: true, data: resolveCandidateImageUrls(handleFallbackAnswer(sessionId, answerText), 'demo', sessionId) };
   }
   try {
     const res = await fetch(`${API_BASE_URL}/sessions/${sessionId}/answer`, {
@@ -179,21 +213,29 @@ export async function submitAnswer(sessionId: string, answerText: string): Promi
     });
     const parsed = await handleResponse<APIResponse<StepResponseData>>(res);
     if (parsed.data) {
-      parsed.data = resolveCandidateImageUrls(parsed.data);
+      parsed.data = resolveCandidateImageUrls(parsed.data, mode, sessionId);
     }
     return parsed;
   } catch (err) {
-    console.warn("API answer failed, falling back to local demo engine:", err);
-    return { success: true, data: resolveCandidateImageUrls(handleFallbackAnswer(sessionId, answerText)) };
+    console.warn("API answer failed:", err);
+    if (mode === 'research') {
+      return {
+        success: false,
+        data: null,
+        error: { code: 'RESEARCH_ANSWER_ERROR', message: "We couldn't search your uploaded photos. Please try again." }
+      };
+    }
+    return { success: true, data: resolveCandidateImageUrls(handleFallbackAnswer(sessionId, answerText), 'demo', sessionId) };
   }
 }
 
 export async function selectCandidate(
   sessionId: string,
-  payload: { selectionType: 'found' | 'close' | 'none'; imageId?: string; rejectedImageIds?: string[] }
+  payload: { selectionType: 'found' | 'close' | 'none'; imageId?: string; rejectedImageIds?: string[] },
+  mode: 'demo' | 'research' = 'demo'
 ): Promise<APIResponse<StepResponseData>> {
-  if (sessionId.startsWith('fallback_sess_')) {
-    return { success: true, data: resolveCandidateImageUrls(handleFallbackSelect(sessionId, payload)) };
+  if (mode === 'demo' && sessionId.startsWith('fallback_sess_')) {
+    return { success: true, data: resolveCandidateImageUrls(handleFallbackSelect(sessionId, payload), 'demo', sessionId) };
   }
   try {
     const res = await fetch(`${API_BASE_URL}/sessions/${sessionId}/select`, {
@@ -203,12 +245,19 @@ export async function selectCandidate(
     });
     const parsed = await handleResponse<APIResponse<StepResponseData>>(res);
     if (parsed.data) {
-      parsed.data = resolveCandidateImageUrls(parsed.data);
+      parsed.data = resolveCandidateImageUrls(parsed.data, mode, sessionId);
     }
     return parsed;
   } catch (err) {
-    console.warn("API select failed, falling back to local demo engine:", err);
-    return { success: true, data: resolveCandidateImageUrls(handleFallbackSelect(sessionId, payload)) };
+    console.warn("API select failed:", err);
+    if (mode === 'research') {
+      return {
+        success: false,
+        data: null,
+        error: { code: 'RESEARCH_SELECT_ERROR', message: "We couldn't search your uploaded photos. Please try again." }
+      };
+    }
+    return { success: true, data: resolveCandidateImageUrls(handleFallbackSelect(sessionId, payload), 'demo', sessionId) };
   }
 }
 

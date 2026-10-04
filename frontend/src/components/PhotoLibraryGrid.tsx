@@ -6,9 +6,11 @@ import { DEMO_PHOTOS, DemoPhoto } from '@/lib/demoFallbackEngine';
 interface PhotoLibraryGridProps {
   activeCandidateIds?: string[];
   isGuideActive?: boolean;
+  mode?: 'demo' | 'research';
+  uploadedCount?: number;
 }
 
-export default function PhotoLibraryGrid({ activeCandidateIds, isGuideActive }: PhotoLibraryGridProps) {
+export default function PhotoLibraryGrid({ activeCandidateIds, isGuideActive, mode = 'demo', uploadedCount = 0 }: PhotoLibraryGridProps) {
   const [failedImageIds, setFailedImageIds] = useState<Record<string, boolean>>({});
 
   // Group photos loosely by date/month as required
@@ -20,20 +22,73 @@ export default function PhotoLibraryGrid({ activeCandidateIds, isGuideActive }: 
   // Candidate dimming ONLY activates after user submits a query AND has active candidates
   const hasCandidateFilter = Boolean(isGuideActive && activeCandidateIds && activeCandidateIds.length > 0);
 
+  if (mode === 'research') {
+    return (
+      <div className="gphotos-content">
+        <div style={{
+          background: 'linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%)',
+          border: '1px solid #BAE6FD',
+          borderRadius: '16px',
+          padding: '32px 24px',
+          maxWidth: '600px',
+          margin: '30px auto',
+          textAlign: 'center',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.04)'
+        }}>
+          <div style={{ fontSize: '40px', marginBottom: '12px' }}>📷🔒</div>
+          <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
+            Research Session Library Ready
+          </h3>
+          <p style={{ fontSize: '14px', color: '#475569', lineHeight: 1.6, marginBottom: '20px' }}>
+            {uploadedCount > 0 ? `${uploadedCount} uploaded photos` : 'Your uploaded photos'} are indexed for this research retrieval session.
+            <br />
+            Photos are hidden during memory tasks to prevent pre-task visual exposure.
+          </p>
+          {hasCandidateFilter ? (
+            <div style={{
+              background: '#10B981',
+              color: '#FFFFFF',
+              padding: '10px 18px',
+              borderRadius: '12px',
+              fontSize: '13px',
+              fontWeight: 600,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <span>✨</span>
+              <span>Memory Guide Active — Evaluating {activeCandidateIds?.length || 0} candidate photo{(activeCandidateIds?.length || 0) === 1 ? '' : 's'}</span>
+            </div>
+          ) : (
+            <div style={{
+              background: '#E2E8F0',
+              color: '#475569',
+              padding: '8px 14px',
+              borderRadius: '12px',
+              fontSize: '12px',
+              fontWeight: 500,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}>
+              <span>✨ Click "Memory Guide AI" to start searching your photos</span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   const renderPhotoTile = (photo: DemoPhoto) => {
     const isCandidate = activeCandidateIds?.includes(photo.image_id);
     const isFailed = failedImageIds[photo.image_id];
 
-    // Candidate dimming rule:
-    // If no candidate filter is active: opacity 1
-    // If photo is in candidate pool: opacity 1, active border
-    // Otherwise: soft fade (0.35 opacity), NEVER pure black
     const tileStyle: React.CSSProperties = {
       position: 'relative',
       aspectRatio: '1 / 1',
       borderRadius: '8px',
       overflow: 'hidden',
-      backgroundColor: '#F1F3F4', // Light neutral background, NOT black
+      backgroundColor: '#F1F3F4',
       cursor: 'pointer',
       transition: 'opacity 0.25s ease, box-shadow 0.25s ease, transform 0.15s ease',
       opacity: !hasCandidateFilter || isCandidate ? 1 : 0.35,

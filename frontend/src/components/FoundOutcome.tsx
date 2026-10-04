@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FoundSummary, SelectionMetadata } from '@/lib/api';
+import { FoundSummary, SelectionMetadata, CandidateData } from '@/lib/api';
 import { DEMO_PHOTOS } from '@/lib/demoFallbackEngine';
 
 interface FoundOutcomeProps {
@@ -13,6 +13,10 @@ interface FoundOutcomeProps {
   loading: boolean;
   selectionMetadata?: SelectionMetadata;
   showDebug?: boolean;
+  mode?: 'demo' | 'research';
+  uploadedCount?: number;
+  sessionId?: string | null;
+  candidates?: CandidateData[];
 }
 
 export default function FoundOutcome({
@@ -24,11 +28,33 @@ export default function FoundOutcome({
   loading,
   selectionMetadata,
   showDebug,
+  mode = 'demo',
+  uploadedCount = 0,
+  sessionId,
+  candidates = [],
 }: FoundOutcomeProps) {
   const [showExplanation, setShowExplanation] = useState(false);
   const [feedbackRating, setFeedbackRating] = useState<number | null>(null);
 
-  const targetPhoto = DEMO_PHOTOS.find(p => p.image_id === selectedImageId) || DEMO_PHOTOS[0];
+  // Target image URL resolution
+  const candidateMatch = candidates.find(c => c.imageId === selectedImageId);
+  let targetImageUrl = candidateMatch?.imageUrl;
+
+  if (!targetImageUrl && selectedImageId) {
+    if (mode === 'research' && sessionId) {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://memoryguidegooglephotos-production.up.railway.app/api/v1';
+      const serverOrigin = baseUrl.replace(/\/api\/v1\/?$/, '');
+      targetImageUrl = `${serverOrigin}/api/v1/sessions/${sessionId}/images/${selectedImageId}`;
+    } else {
+      const demoMatch = DEMO_PHOTOS.find(p => p.image_id === selectedImageId);
+      targetImageUrl = demoMatch?.image_url || '/images/demo-photos/birthday_01.jpg';
+    }
+  }
+
+  if (!targetImageUrl) {
+    targetImageUrl = DEMO_PHOTOS[0].image_url;
+  }
+
   const questionsAsked = summary?.questionsAsked || ["Were you with a group of people, or was it a solo/pair photo?", "Was this outdoors or indoors?"];
   const totalRounds = summary?.totalRounds || 2;
 
@@ -51,7 +77,7 @@ export default function FoundOutcome({
           Found it ✨
         </h2>
         <p style={{ fontSize: '13px', opacity: 0.9 }}>
-          {totalRounds} questions • Target located
+          {totalRounds} question{totalRounds === 1 ? '' : 's'} • Target located
         </p>
       </div>
 
@@ -65,17 +91,17 @@ export default function FoundOutcome({
       }}>
         <div style={{ aspectRatio: '4/3', width: '100%', background: '#F1F5F9' }}>
           <img
-            src={targetPhoto.image_url}
-            alt={targetPhoto.manual_label}
+            src={targetImageUrl}
+            alt={`Target photo ${selectedImageId}`}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             onError={(e) => {
-              (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${targetPhoto.image_id}/600/450`;
+              (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${selectedImageId || 'target'}/600/450`;
             }}
           />
         </div>
         <div style={{ padding: '16px' }}>
           <p style={{ fontSize: '13px', color: '#475569', fontStyle: 'italic', lineHeight: 1.4 }}>
-            "{targetPhoto.manual_label}"
+            "{mode === 'research' ? 'Target photo identified from your uploaded library' : 'Target photo successfully identified'}"
           </p>
         </div>
       </div>
@@ -97,7 +123,7 @@ export default function FoundOutcome({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#475569' }}>
             <span style={{ background: '#DBEAFE', color: '#1E40AF', padding: '2px 8px', borderRadius: '10px', fontWeight: 600, fontSize: '11px' }}>START</span>
-            <span>29 photos in library</span>
+            <span>{mode === 'research' ? `${uploadedCount} photos in uploaded library` : '29 photos in library'}</span>
           </div>
 
           <div style={{ color: '#94A3B8', paddingLeft: '14px', fontSize: '11px' }}>↓</div>

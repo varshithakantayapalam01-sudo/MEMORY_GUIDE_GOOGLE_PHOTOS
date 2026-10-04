@@ -35,6 +35,9 @@ interface MemoryGuidePanelProps {
   selectionMetadata?: SelectionMetadata;
   showDebug: boolean;
   onToggleDebug: () => void;
+  mode?: 'demo' | 'research';
+  uploadedCount?: number;
+  sessionId?: string | null;
 }
 
 export default function MemoryGuidePanel({
@@ -60,6 +63,9 @@ export default function MemoryGuidePanel({
   selectionMetadata,
   showDebug,
   onToggleDebug,
+  mode = 'demo',
+  uploadedCount = 0,
+  sessionId,
 }: MemoryGuidePanelProps) {
   const [queryInput, setQueryInput] = useState('');
 
@@ -79,9 +85,27 @@ export default function MemoryGuidePanel({
             <span>✨</span>
             <span>Memory Guide</span>
           </div>
-          <p className="panel-subtext">
-            Tell me what you remember. I'll figure out which clue would help narrow it down.
-          </p>
+          {mode === 'research' ? (
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: '#E6F4EA',
+              color: '#137333',
+              fontSize: '12px',
+              fontWeight: 600,
+              padding: '4px 10px',
+              borderRadius: '12px',
+              marginTop: '6px'
+            }}>
+              <span>📷</span>
+              <span>Searching your uploaded library • {uploadedCount} photos</span>
+            </div>
+          ) : (
+            <p className="panel-subtext">
+              Tell me what you remember. I'll figure out which clue would help narrow it down.
+            </p>
+          )}
         </div>
         <button className="btn-ghost" onClick={onClose} style={{ fontSize: '18px', padding: '4px 8px' }}>
           ✕
@@ -188,7 +212,11 @@ export default function MemoryGuidePanel({
                   borderRadius: '50%',
                   animation: 'spin 0.8s linear infinite'
                 }} />
-                <span>Looking through your library… (29 photos → 12 possible)</span>
+                <span>
+                  {mode === 'research'
+                    ? `Looking through your library… (${uploadedCount} photos)`
+                    : 'Looking through your library… (29 photos → 12 possible)'}
+                </span>
               </div>
             )}
           </div>
@@ -226,6 +254,10 @@ export default function MemoryGuidePanel({
             loading={loading}
             selectionMetadata={selectionMetadata}
             showDebug={showDebug}
+            mode={mode}
+            uploadedCount={uploadedCount}
+            sessionId={sessionId}
+            candidates={candidates}
           />
         )}
       </div>
