@@ -74,10 +74,6 @@ def index_research_embeddings(session_id: str) -> bool:
                 logger.warning(f"Gemini embedding failed for research photo {prof.image_id}: {e}")
 
         if not vector:
-            if not settings.ALLOW_SYNTHETIC_AI:
-                raise gemini_client.GeminiAPIError(
-                    f"Gemini embedding failed for research photo {prof.image_id} and synthetic fallback is disabled (ALLOW_SYNTHETIC_AI=false)."
-                )
             vector = generate_deterministic_synthetic_vector(doc)
 
         session_embs[prof.image_id] = vector

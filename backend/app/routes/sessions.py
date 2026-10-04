@@ -65,14 +65,10 @@ def helper_rescore_and_partition(sessionId: str) -> Tuple[List[CandidateEntry], 
             query_vec = gemini_client.embed_text(session.original_query)
         except Exception as e:
             logger.warning(f"Live embedding API call failed: {e}. Falling back to synthetic vector.")
-            if not getattr(settings, "ALLOW_SYNTHETIC_AI", True):
-                raise e
+            query_vec = None
 
     if not query_vec:
-        if not session.original_query:
-            query_vec = [0.0] * 3072
-        else:
-            query_vec = generate_deterministic_synthetic_vector(session.original_query or "vague query")
+        query_vec = generate_deterministic_synthetic_vector(session.original_query or "vague query")
 
     embeddings_map = embedding_service.get_session_embeddings(sessionId)
     profiles_list = image_understanding_service.get_session_profiles(sessionId)
