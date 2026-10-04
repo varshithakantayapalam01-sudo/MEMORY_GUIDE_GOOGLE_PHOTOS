@@ -1,0 +1,234 @@
+[
+  {
+    "image_id": "demo_001",
+    "filename": "birthday_01.jpg",
+    "image_url": "/images/demo-photos/birthday_01.jpg",
+    "source": "demo",
+    "cluster_id": "birthday",
+    "manual_label": "Childhood birthday celebration indoors with pink dress, cake, and balloons"
+  },
+  {
+    "image_id": "demo_002",
+    "filename": "birthday_02.jpg",
+    "image_url": "/images/demo-photos/birthday_02.jpg",
+    "source": "demo",
+    "cluster_id": "birthday",
+    "manual_label": "Birthday party indoors with yellow dress, chocolate cake, and yellow balloons"
+  },
+  {
+    "image_id": "demo_003",
+    "filename": "birthday_03.jpg",
+    "image_url": "/images/demo-photos/birthday_03.jpg",
+    "source": "demo",
+    "cluster_id": "birthday",
+    "manual_label": "Outdoor birthday celebration on patio with blue shirt and cake"
+  },
+  {
+    "image_id": "demo_004",
+    "filename": "birthday_04.jpg",
+    "image_url": "/images/demo-photos/birthday_04.jpg",
+    "source": "demo",
+    "cluster_id": "birthday",
+    "manual_label": "Solo adult in pink sweater holding a birthday cupcake indoors with balloons"
+  },
+  {
+    "image_id": "demo_005",
+    "filename": "birthday_05.jpg",
+    "image_url": "/images/demo-photos/birthday_05.jpg",
+    "source": "demo",
+    "cluster_id": "birthday",
+    "manual_label": "Restaurant birthday dinner with black and gold attire, cake, and sparklers"
+  },
+  {
+    "image_id": "demo_006",
+    "filename": "birthday_06.jpg",
+    "image_url": "/images/demo-photos/birthday_06.jpg",
+    "source": "demo",
+    "cluster_id": "birthday",
+    "manual_label": "Outdoor park pavilion birthday party with pink t-shirt and colorful balloons"
+  },
+  {
+    "image_id": "demo_007",
+    "filename": "birthday_07.jpg",
+    "image_url": "/images/demo-photos/birthday_07.jpg",
+    "source": "demo",
+    "cluster_id": "birthday",
+    "manual_label": "Child in blue outfit at indoor birthday party with yellow balloons and cake"
+  },
+  {
+    "image_id": "demo_008",
+    "filename": "birthday_08.jpg",
+    "image_url": "/images/demo-photos/birthday_08.jpg",
+    "source": "demo",
+    "cluster_id": "birthday",
+    "manual_label": "Outdoor garden birthday gathering in yellow and white clothing with cake and balloons"
+  },
+  {
+    "image_id": "demo_009",
+    "filename": "beach_01.jpg",
+    "image_url": "/images/demo-photos/beach_01.jpg",
+    "source": "demo",
+    "cluster_id": "vacation",
+    "manual_label": "Family beach trip during golden hour sunset near ocean waves"
+  },
+  {
+    "image_id": "demo_010",
+    "filename": "beach_02.jpg",
+    "image_url": "/images/demo-photos/beach_02.jpg",
+    "source": "demo",
+    "cluster_id": "vacation",
+    "manual_label": "Solo person walking along sandy beach coast in blue swimwear and sun hat"
+  },
+  {
+    "image_id": "demo_011",
+    "filename": "beach_03.jpg",
+    "image_url": "/images/demo-photos/beach_03.jpg",
+    "source": "demo",
+    "cluster_id": "vacation",
+    "manual_label": "Sitting under beach umbrella on sunny coast wearing white shirt and sunglasses"
+  },
+  {
+    "image_id": "demo_012",
+    "filename": "beach_04.jpg",
+    "image_url": "/images/demo-photos/beach_04.jpg",
+    "source": "demo",
+    "cluster_id": "vacation",
+    "manual_label": "Friends sitting on beach blanket wearing pink and white casual tops near ocean"
+  },
+  {
+    "image_id": "demo_013",
+    "filename": "beach_05.jpg",
+    "image_url": "/images/demo-photos/beach_05.jpg",
+    "source": "demo",
+    "cluster_id": "vacation",
+    "manual_label": "Pair walking along rocky beach coastline with sun hats and blue ocean background"
+  },
+  {
+    "image_id": "demo_014",
+    "filename": "beach_06.jpg",
+    "image_url": "/images/demo-photos/beach_06.jpg",
+    "source": "demo",
+    "cluster_id": "vacation",
+    "manual_label": "Group playing beach volleyball on sunny sandy coast near water"
+  },
+  {
+    "image_id": "demo_015",
+    "filename": "beach_07.jpg",
+    "image_url": "/images/demo-photos/beach_07.jpg",
+    "source": "demo",
+    "cluster_id": "vacation",
+    "manual_label": "Solo person in yellow sun dress standing near palm trees on beach trip"
+  },
+  {
+    "image_id": "demo_016",
+    "filename": "park_01.jpg",
+    "image_url": "/images/demo-photos/park_01.jpg",
+    "source": "demo",
+    "cluster_id": "outdoor",
+    "manual_label": "Picnic on red checkered blanket on green park grass with basket and food"
+  },
+  {
+    "image_id": "demo_017",
+    "filename": "park_02.jpg",
+    "image_url": "/images/demo-photos/park_02.jpg",
+    "source": "demo",
+    "cluster_id": "outdoor",
+    "manual_label": "Friends playing frisbee in sports clothing on open green park field"
+  },
+  {
+    "image_id": "demo_018",
+    "filename": "park_03.jpg",
+    "image_url": "/images/demo-photos/park_03.jpg",
+    "source": "demo",
+    "cluster_id": "outdoor",
+    "manual_label": "Solo person in pink hoodie walking a Golden Retriever dog along park path"
+  },
+  {
+    "image_id": "demo_019",
+    "filename": "park_04.jpg",
+    "image_url": "/images/demo-photos/park_04.jpg",
+    "source": "demo",
+    "cluster_id": "outdoor",
+    "manual_label": "Family outdoor picnic gathering on blanket under park oak tree at sunset"
+  },
+  {
+    "image_id": "demo_020",
+    "filename": "park_05.jpg",
+    "image_url": "/images/demo-photos/park_05.jpg",
+    "source": "demo",
+    "cluster_id": "outdoor",
+    "manual_label": "Group playing soccer in blue athletic wear on open park grass field"
+  },
+  {
+    "image_id": "demo_021",
+    "filename": "park_06.jpg",
+    "image_url": "/images/demo-photos/park_06.jpg",
+    "source": "demo",
+    "cluster_id": "outdoor",
+    "manual_label": "Person in yellow jacket sitting on wooden bench surrounded by green park trees"
+  },
+  {
+    "image_id": "demo_022",
+    "filename": "park_07.jpg",
+    "image_url": "/images/demo-photos/park_07.jpg",
+    "source": "demo",
+    "cluster_id": "outdoor",
+    "manual_label": "Group gathering on park grass with picnic blanket and a dog eating snacks"
+  },
+  {
+    "image_id": "demo_023",
+    "filename": "festival_01.jpg",
+    "image_url": "/images/demo-photos/festival_01.jpg",
+    "source": "demo",
+    "cluster_id": "celebration",
+    "manual_label": "Diwali festival celebration indoors with illuminated diyas and traditional sweets"
+  },
+  {
+    "image_id": "demo_024",
+    "filename": "wedding_01.jpg",
+    "image_url": "/images/demo-photos/wedding_01.jpg",
+    "source": "demo",
+    "cluster_id": "celebration",
+    "manual_label": "Traditional wedding ceremony in outdoor garden with floral arch and bridal gown"
+  },
+  {
+    "image_id": "demo_025",
+    "filename": "festival_02.jpg",
+    "image_url": "/images/demo-photos/festival_02.jpg",
+    "source": "demo",
+    "cluster_id": "celebration",
+    "manual_label": "Outdoor festival celebration lighting sparklers and diyas in pink and yellow ethnic kurti"
+  },
+  {
+    "image_id": "demo_026",
+    "filename": "festival_03.jpg",
+    "image_url": "/images/demo-photos/festival_03.jpg",
+    "source": "demo",
+    "cluster_id": "celebration",
+    "manual_label": "Formal indoor celebration with formal suits, sarees, and floral decorations"
+  },
+  {
+    "image_id": "demo_027",
+    "filename": "festival_04.jpg",
+    "image_url": "/images/demo-photos/festival_04.jpg",
+    "source": "demo",
+    "cluster_id": "celebration",
+    "manual_label": "Festival sweets preparation indoors with yellow traditional dress and marigold flowers"
+  },
+  {
+    "image_id": "demo_028",
+    "filename": "wedding_02.jpg",
+    "image_url": "/images/demo-photos/wedding_02.jpg",
+    "source": "demo",
+    "cluster_id": "celebration",
+    "manual_label": "Formal outdoor wedding party in garden with flower beds and formal attire"
+  },
+  {
+    "image_id": "demo_029",
+    "filename": "festival_05.jpg",
+    "image_url": "/images/demo-photos/festival_05.jpg",
+    "source": "demo",
+    "cluster_id": "celebration",
+    "manual_label": "Family decorating entrance with marigold flowers and diyas for festival celebration"
+  }
+]

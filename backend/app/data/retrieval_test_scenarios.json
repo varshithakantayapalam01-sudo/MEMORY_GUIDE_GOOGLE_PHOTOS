@@ -1,0 +1,62 @@
+[
+  {
+    "scenario_id": "sc_01",
+    "query": "That older birthday photo where I think I was wearing pink.",
+    "target_image_id": "demo_001"
+  },
+  {
+    "scenario_id": "sc_02",
+    "query": "Birthday celebration with yellow decorations and cake.",
+    "target_image_id": "demo_002"
+  },
+  {
+    "scenario_id": "sc_03",
+    "query": "Outdoor birthday party with a cake on the table.",
+    "target_image_id": "demo_003"
+  },
+  {
+    "scenario_id": "sc_04",
+    "query": "That beach photo from a trip where we were near the water at sunset.",
+    "target_image_id": "demo_009"
+  },
+  {
+    "scenario_id": "sc_05",
+    "query": "Walking alone along the sandy beach on a sunny day.",
+    "target_image_id": "demo_010"
+  },
+  {
+    "scenario_id": "sc_06",
+    "query": "Friends sitting together on the beach during a trip.",
+    "target_image_id": "demo_012"
+  },
+  {
+    "scenario_id": "sc_07",
+    "query": "The park picture where we were having a picnic on the grass.",
+    "target_image_id": "demo_016"
+  },
+  {
+    "scenario_id": "sc_08",
+    "query": "Playing frisbee outside on the green grass.",
+    "target_image_id": "demo_017"
+  },
+  {
+    "scenario_id": "sc_09",
+    "query": "Walking in the park with a dog.",
+    "target_image_id": "demo_018"
+  },
+  {
+    "scenario_id": "sc_10",
+    "query": "Diwali festival celebration with diyas indoors.",
+    "target_image_id": "demo_023"
+  },
+  {
+    "scenario_id": "sc_11",
+    "query": "Wedding ceremony outside in a decorated garden.",
+    "target_image_id": "demo_024"
+  },
+  {
+    "scenario_id": "sc_12",
+    "query": "Lighting sparklers outside during a festival.",
+    "target_image_id": "demo_025"
+  }
+]

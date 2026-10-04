@@ -1,0 +1,533 @@
+PROJECT TITLE
+Memory Guide — AI-Guided Retrieval for Vaguely Remembered Photos
+
+PROJECT CONTEXT
+
+Users accumulate thousands of photos, screenshots, documents, travel memories,
+receipts, product images and other visual items over many years.
+
+Google Photos search works well when users know what they are looking for and can
+express it using recognizable attributes such as a person, place, object or date.
+
+However, a different retrieval problem occurs when a user KNOWS that a specific
+photo exists, but only remembers it partially.
+
+For example:
+
+- “That childhood photo where I was wearing a pink dress and cutting a cake.”
+- “The picture of my dog while I was training him in the hallway.”
+- “That old photo with my sisters during a festival, sometime around college.”
+- “The screenshot of the white Nike shoes I wanted to send to my friend.”
+
+The user may remember several contextual, visual or episodic clues, but may not
+remember the exact date, location, album, object name or ideal search keyword.
+
+This project is NOT about improving Google Photos search generally.
+
+It focuses specifically on retrieval of one known but vaguely remembered visual item.
+
+
+CORE USER PROBLEM
+
+When users try to retrieve a specific older photo without remembering precise
+metadata such as the exact date or location, they often still remember multiple
+useful details about the photo.
+
+These memories may include:
+
+- people
+- visual appearance
+- clothing
+- objects
+- surroundings
+- approximate time period
+- event or occasion
+- activity
+- something that happened before or after
+- why the photo was taken
+- emotional or personal context
+
+However, users often do not know which of these memories will actually help narrow
+the search.
+
+After an initial search produces broad, partially relevant or ambiguous results,
+the user has to decide:
+
+“What should I try next?”
+
+This leads to trial-and-error searching, changing keywords, guessing dates,
+searching by people or location, manually scrolling through months or years,
+checking WhatsApp or other apps, asking another person for details, or eventually
+giving up.
+
+
+ROOT CAUSE HYPOTHESIS
+
+The main problem is not simply that users cannot remember the photo.
+
+Users often remember enough information to recognize or richly describe the target.
+
+The problem is that vague-memory retrieval requires progressively identifying
+which remembered clue will best discriminate the intended photo from other
+candidate photos.
+
+Users do not always know:
+
+1. which remembered clues the system can understand,
+2. which clue will narrow the current candidate set,
+3. what to try after an unsuccessful search,
+4. how to move from many partially relevant photos toward one intended photo.
+
+Therefore vague-memory retrieval becomes a user-led trial-and-error process.
+
+
+TARGET USER
+
+Primary target segment:
+
+Users trying to retrieve ONE specific older personal photo that:
+
+- they believe exists in their photo library,
+- they can partially describe or recognize,
+- they cannot locate using precise date/location metadata,
+- and their initial search returns broad, ambiguous or unsuccessful results.
+
+Primary MVP focus should be personal photos.
+
+Receipts, screenshots, documents and product images may be supported later but
+should not drive MVP scope.
+
+
+PRODUCT HYPOTHESIS
+
+Instead of requiring the user to repeatedly invent new search queries, an AI system
+can actively guide the retrieval process.
+
+After receiving the user's initial vague memory, the AI should:
+
+1. retrieve an initial candidate set,
+2. inspect the remaining candidate photos,
+3. identify which missing clue would best reduce uncertainty,
+4. ask the user ONE useful clarification question,
+5. use the answer to narrow the candidate set,
+6. repeat only when necessary,
+7. present a small candidate set for recognition.
+
+The hypothesis to test is:
+
+“When an initial vague-memory search is ambiguous, AI-selected discriminative
+questions can help users identify the intended photo with fewer unguided search
+reformulations and less manual scrolling.”
+
+
+KEY DIFFERENTIATOR
+
+This should NOT be built as a generic chatbot where the user repeatedly decides
+what to type next.
+
+The important product behavior is:
+
+THE SYSTEM DECIDES WHICH CLUE TO ASK FOR NEXT.
+
+Example:
+
+User:
+“I’m trying to find an old childhood photo. I don’t remember when it was.”
+
+Bad implementation:
+AI says:
+“Can you give me more information?”
+
+Better implementation:
+AI analyzes the candidate photos and determines that clothing would distinguish
+them well.
+
+AI:
+“Do you remember what you were wearing?”
+
+User:
+“A pink frock.”
+
+The candidate set narrows.
+
+AI then determines that occasion is the most useful remaining distinction.
+
+AI:
+“Was this during a birthday or another celebration?”
+
+User:
+“I remember cutting a cake.”
+
+The candidate set narrows again.
+
+Then the system shows a small group of likely photos for recognition.
+
+The AI questions should be based on what would meaningfully narrow the remaining
+candidate set, not a fixed questionnaire.
+
+
+MVP GOAL
+
+Build a functional standalone web MVP called “Memory Guide”.
+
+Another person must be able to use the application and attempt to retrieve a
+specific photo.
+
+The MVP should prove or disprove the adaptive-guidance hypothesis.
+
+It does NOT need to integrate directly with a user's real Google Photos account for
+the first MVP.
+
+The application may use:
+
+- a seeded demo photo library,
+- a small test photo dataset,
+- or allow users/testers to upload a limited set of images.
+
+Keep the image set manageable enough that the AI can analyze and rank candidates.
+
+
+CORE USER FLOW
+
+STEP 1 — Start retrieval
+
+Prompt the user:
+
+“What photo are you trying to find?
+Tell me anything you remember — you do not need to know the date or exact words.”
+
+Allow free-form natural-language input.
+
+
+STEP 2 — Understand initial memory
+
+Extract possible clues from the description, such as:
+
+- person
+- object
+- visual appearance
+- clothing
+- activity
+- location/environment
+- approximate time
+- event
+- relationship
+- before/after context
+- purpose
+- emotional/contextual information
+
+
+STEP 3 — Generate initial candidate set
+
+Compare the user's description against available images.
+
+Return an internal ranked candidate set.
+
+Do not immediately overwhelm the user with dozens of photos.
+
+
+STEP 4 — Identify uncertainty
+
+Analyze the candidate set and determine what important visual/contextual attribute
+varies across the candidates.
+
+Choose the clarification question most likely to reduce ambiguity.
+
+Examples:
+
+“Was this indoors or outdoors?”
+
+“Do you remember what the person was wearing?”
+
+“Was there a cake visible?”
+
+“Was this during a celebration?”
+
+“Do you remember whether anyone else was in the photo?”
+
+“Was this near a beach or somewhere in the city?”
+
+
+STEP 5 — Ask ONE adaptive question
+
+Ask only one question at a time.
+
+The question should be:
+
+- easy for the user to answer from memory,
+- grounded in the remaining candidate set,
+- likely to eliminate multiple incorrect candidates,
+- not repetitive,
+- not unnecessarily specific.
+
+
+STEP 6 — Narrow candidates
+
+Use the user's answer to update candidate scores.
+
+Display something such as:
+
+“Great — that helped narrow it from 24 possible photos to 7.”
+
+This makes the system's progress understandable.
+
+
+STEP 7 — Recognition
+
+Once the candidate set becomes sufficiently small, show approximately 3–6 likely
+photos.
+
+Ask:
+
+“Do any of these look like the photo you remember?”
+
+
+Allow:
+
+- “Yes, this is it”
+- “This looks close”
+- “None of these”
+
+
+STEP 8 — Continue refinement if necessary
+
+If the user says none match, use previous clues plus rejected candidates to choose
+the next useful clarification question.
+
+Do not restart the conversation.
+
+
+SUCCESS STATE
+
+When the user identifies the target photo:
+
+Show:
+
+“Found it.”
+
+Also display a short retrieval trace such as:
+
+Started with:
+“Old childhood photo”
+
+Helpful clues:
+Pink frock → Cake cutting → Two people
+
+Questions asked:
+2
+
+This can later support MVP testing and analytics.
+
+
+FAILURE STATE
+
+If the system cannot confidently retrieve the target after several questions:
+
+Do not endlessly question the user.
+
+After approximately 4–5 clarification rounds, offer:
+
+- show remaining candidates,
+- modify the original description,
+- start over.
+
+Record this attempt as unresolved.
+
+
+AI BEHAVIOR REQUIREMENTS
+
+The AI must distinguish between:
+
+OBSERVED USER CLUES
+Information directly provided by the user.
+
+AI INFERENCE
+Information inferred from images or context.
+
+The system must never present an inference as something the user said.
+
+The AI should maintain a structured retrieval state such as:
+
+original_query
+remembered_clues
+candidate_images
+candidate_scores
+questions_asked
+user_answers
+rejected_candidates
+remaining_uncertainty
+retrieval_status
+
+
+ADAPTIVE QUESTION SELECTION
+
+The most important intelligence in this MVP is question selection.
+
+For each iteration:
+
+1. inspect the highest-ranked remaining candidate images,
+2. identify attributes that differ meaningfully between them,
+3. determine which attribute the user is reasonably likely to remember,
+4. generate one simple question about that attribute,
+5. avoid asking about information already supplied,
+6. avoid questions whose answers would barely change the candidate set.
+
+Prefer high-discrimination clues.
+
+Example:
+
+If 9/10 candidates contain the same person, asking:
+“Was Sarah in the photo?”
+is low-value.
+
+If 5 candidates are indoors and 5 outdoors, asking:
+“Was this indoors or outdoors?”
+is potentially high-value.
+
+The AI should optimize for information gain, but the implementation can use a
+reasonable heuristic rather than mathematically perfect information theory.
+
+
+MVP SCREENS
+
+Keep the UI small.
+
+Suggested screens/states:
+
+1. Landing / Start Retrieval
+2. Initial memory input
+3. Searching / interpreting memory
+4. Adaptive clarification question
+5. Candidate narrowing state
+6. Visual candidate selection
+7. Success / unresolved outcome
+
+Do not build unnecessary settings, profile management or social features.
+
+
+DESIGN PRINCIPLES
+
+The experience should feel:
+
+- calm
+- simple
+- visual
+- intelligent
+- conversational but not chatbot-heavy
+- similar in polish to a modern Google product
+
+The photo candidates should remain visually dominant.
+
+The user should always understand:
+
+“What does the system currently know?”
+
+and
+
+“What is it asking me now?”
+
+
+IMPORTANT NON-GOALS
+
+Do NOT build:
+
+- a full Google Photos clone
+- photo backup/storage infrastructure
+- album organization
+- sharing features
+- editing tools
+- generic image search
+- photo recommendations
+- “Memories” discovery feed
+- facial-recognition administration
+- a generic chatbot
+- a solution that only converts long natural-language prompts into search queries
+
+Do not require an exact date/location.
+
+Do not assume users know which keyword will work.
+
+
+MVP TESTING REQUIREMENT
+
+The MVP will later be tested with at least 3 representative users.
+
+For each test, capture:
+
+1. whether the target photo was found,
+2. time to target,
+3. number of clarification questions,
+4. number of user-generated query reformulations,
+5. whether manual scrolling was required,
+6. whether users abandoned the task,
+7. which question most helped narrow the search,
+8. whether any AI question was confusing or irrelevant.
+
+
+PRIMARY SUCCESS METRIC
+
+Guided Retrieval Success Rate
+
+Percentage of vague-memory retrieval tasks in which the intended photo is
+successfully identified through the guided retrieval experience.
+
+
+DIAGNOSTIC METRICS
+
+Questions to Target
+Average number of clarification questions before successful recognition.
+
+Time to Target
+Time from initial vague description to successful photo identification.
+
+Candidate Reduction per Question
+How much each clarification answer reduces the candidate set.
+
+Manual Recovery Rate
+Percentage of attempts where users abandon guidance and resort to manual browsing.
+
+Unguided Reformulation Rate
+How often users still need to invent a completely new search strategy themselves.
+
+Question Helpfulness
+Whether users felt the AI's question helped them recall or communicate something
+useful.
+
+
+GUARDRAILS
+
+Avoid:
+
+- excessive questioning,
+- hallucinating details about images,
+- exposing sensitive image information unnecessarily,
+- overconfident matches,
+- forcing users to provide information they do not remember.
+
+Always support:
+
+“I don't remember.”
+
+If the user does not know an answer, select another useful clue instead.
+
+
+CORE PRODUCT PRINCIPLE
+
+The MVP should not ask:
+
+“What else do you remember?”
+
+unless absolutely necessary.
+
+It should instead reason:
+
+“Given what the user has already told me and the candidate photos remaining,
+what is the single most useful thing I should ask them next?”
+
+
+FINAL PRODUCT THESIS
+
+Vague-memory retrieval should not require users to know how to search.
+
+Memory Guide should progressively convert incomplete human memory into a small,
+recognizable candidate set by deciding which clue to ask for next.

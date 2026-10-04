@@ -1,0 +1,32 @@
+[
+  {
+    "scenario_id": "hard_01",
+    "query": "That birthday picture from years ago.",
+    "target_image_id": "demo_001",
+    "description": "Vague birthday query matching multiple birthday photos (demo_001, demo_002, demo_003, demo_004, demo_005, demo_006, demo_007, demo_008)"
+  },
+  {
+    "scenario_id": "hard_02",
+    "query": "That beach photo where I was with people.",
+    "target_image_id": "demo_009",
+    "description": "Vague beach trip query matching family beach, group beach, and couple beach photos (demo_009, demo_012, demo_013, demo_014)"
+  },
+  {
+    "scenario_id": "hard_03",
+    "query": "That picture from the park.",
+    "target_image_id": "demo_016",
+    "description": "Vague park query matching picnic, frisbee, dog walk, and soccer photos (demo_016, demo_017, demo_018, demo_019, demo_020, demo_021, demo_022)"
+  },
+  {
+    "scenario_id": "hard_04",
+    "query": "That festival photo where we were dressed traditionally.",
+    "target_image_id": "demo_023",
+    "description": "Vague traditional festival query matching indoor Diwali, sparklers, and sweets prep photos (demo_023, demo_025, demo_027, demo_029)"
+  },
+  {
+    "scenario_id": "hard_05",
+    "query": "The celebration picture where there were decorations.",
+    "target_image_id": "demo_002",
+    "description": "Vague celebration query matching yellow balloons birthday, wedding, and festival photos (demo_002, demo_008, demo_024, demo_026)"
+  }
+]
