@@ -75,6 +75,19 @@ export interface StepResponseData {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://memoryguidegooglephotos-production.up.railway.app/api/v1';
 
+function resolveCandidateImageUrls(data: StepResponseData): StepResponseData {
+  if (data.candidates) {
+    data.candidates = data.candidates.map(c => {
+      const match = DEMO_PHOTOS.find(dp => dp.image_id === c.imageId);
+      if (match) {
+        return { ...c, imageUrl: match.image_url };
+      }
+      return c;
+    });
+  }
+  return data;
+}
+
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     let errMessage = `HTTP Error ${response.status}`;
@@ -126,7 +139,6 @@ export async function uploadPhotos(sessionId: string, files: File[]): Promise<AP
     });
     return await handleResponse(res);
   } catch (err: any) {
-    // If client research fallback needed
     return {
       success: true,
       data: { uploadedCount: files.length, imageCount: files.length, status: 'ready', message: 'Uploaded successfully (local session)' }
@@ -136,7 +148,7 @@ export async function uploadPhotos(sessionId: string, files: File[]): Promise<AP
 
 export async function submitQuery(sessionId: string, query: string): Promise<APIResponse<StepResponseData>> {
   if (sessionId.startsWith('fallback_sess_')) {
-    return { success: true, data: handleFallbackQuery(sessionId, query) };
+    return { success: true, data: resolveCandidateImageUrls(handleFallbackQuery(sessionId, query)) };
   }
   try {
     const res = await fetch(`${API_BASE_URL}/sessions/${sessionId}/query`, {
@@ -144,16 +156,20 @@ export async function submitQuery(sessionId: string, query: string): Promise<API
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query }),
     });
-    return await handleResponse(res);
+    const parsed = await handleResponse<APIResponse<StepResponseData>>(res);
+    if (parsed.data) {
+      parsed.data = resolveCandidateImageUrls(parsed.data);
+    }
+    return parsed;
   } catch (err) {
     console.warn("API query failed, falling back to local demo engine:", err);
-    return { success: true, data: handleFallbackQuery(sessionId, query) };
+    return { success: true, data: resolveCandidateImageUrls(handleFallbackQuery(sessionId, query)) };
   }
 }
 
 export async function submitAnswer(sessionId: string, answerText: string): Promise<APIResponse<StepResponseData>> {
   if (sessionId.startsWith('fallback_sess_')) {
-    return { success: true, data: handleFallbackAnswer(sessionId, answerText) };
+    return { success: true, data: resolveCandidateImageUrls(handleFallbackAnswer(sessionId, answerText)) };
   }
   try {
     const res = await fetch(`${API_BASE_URL}/sessions/${sessionId}/answer`, {
@@ -161,10 +177,14 @@ export async function submitAnswer(sessionId: string, answerText: string): Promi
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ answerText }),
     });
-    return await handleResponse(res);
+    const parsed = await handleResponse<APIResponse<StepResponseData>>(res);
+    if (parsed.data) {
+      parsed.data = resolveCandidateImageUrls(parsed.data);
+    }
+    return parsed;
   } catch (err) {
     console.warn("API answer failed, falling back to local demo engine:", err);
-    return { success: true, data: handleFallbackAnswer(sessionId, answerText) };
+    return { success: true, data: resolveCandidateImageUrls(handleFallbackAnswer(sessionId, answerText)) };
   }
 }
 
@@ -173,7 +193,7 @@ export async function selectCandidate(
   payload: { selectionType: 'found' | 'close' | 'none'; imageId?: string; rejectedImageIds?: string[] }
 ): Promise<APIResponse<StepResponseData>> {
   if (sessionId.startsWith('fallback_sess_')) {
-    return { success: true, data: handleFallbackSelect(sessionId, payload) };
+    return { success: true, data: resolveCandidateImageUrls(handleFallbackSelect(sessionId, payload)) };
   }
   try {
     const res = await fetch(`${API_BASE_URL}/sessions/${sessionId}/select`, {
@@ -181,10 +201,14 @@ export async function selectCandidate(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    return await handleResponse(res);
+    const parsed = await handleResponse<APIResponse<StepResponseData>>(res);
+    if (parsed.data) {
+      parsed.data = resolveCandidateImageUrls(parsed.data);
+    }
+    return parsed;
   } catch (err) {
     console.warn("API select failed, falling back to local demo engine:", err);
-    return { success: true, data: handleFallbackSelect(sessionId, payload) };
+    return { success: true, data: resolveCandidateImageUrls(handleFallbackSelect(sessionId, payload)) };
   }
 }
 
