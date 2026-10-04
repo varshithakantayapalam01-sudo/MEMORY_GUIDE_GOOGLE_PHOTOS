@@ -4,8 +4,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     GEMINI_API_KEY: str = "your_gemini_api_key"
-    GEMINI_MODEL: str = "gemini-3.8-flash"
-    EMBEDDING_MODEL: str = "gemini-embedding-001"
+    GEMINI_MODEL: str = "gemini-2.0-flash"
+    EMBEDDING_MODEL: str = "text-embedding-004"
     ALLOW_SYNTHETIC_AI: bool = True
     INITIAL_ACTIVE_LIMIT: int = 12
 

@@ -206,6 +206,7 @@ async def upload_research_photos(sessionId: str, files: List[UploadFile] = File(
     try:
         saved_images = await upload_service.save_research_uploads(sessionId, files)
         image_understanding_service.index_research_library(sessionId)
+        embedding_service.index_research_embeddings(sessionId)
 
         session = session_manager.get_session(sessionId)
         current_status = session.retrieval_status if session else "ready"

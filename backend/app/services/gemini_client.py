@@ -59,7 +59,7 @@ def _get_client() -> genai.Client:
     return genai.Client(api_key=settings.GEMINI_API_KEY)
 
 
-def analyze_image(image_bytes: bytes, mime_type: str = "image/jpeg", max_retries: int = 2) -> Dict[str, Any]:
+def analyze_image(image_bytes: bytes, mime_type: str = "image/jpeg", max_retries: int = 1) -> Dict[str, Any]:
     """
     Analyzes raw image bytes using Gemini Vision and returns structured attribute profile dictionary.
     NEVER logs raw image bytes or API keys.
@@ -71,7 +71,7 @@ def analyze_image(image_bytes: bytes, mime_type: str = "image/jpeg", max_retries
     logger.info(f"Initiating Gemini vision analysis using model '{model_name}' (size: {len(image_bytes)} bytes)")
 
     last_exception = None
-    for attempt in range(1, max_retries + 2):
+    for attempt in range(1, max_retries + 1):
         try:
             client = _get_client()
             
@@ -117,18 +117,18 @@ def analyze_image(image_bytes: bytes, mime_type: str = "image/jpeg", max_retries
         except (GeminiAPIError, GeminiParseError) as e:
             last_exception = e
             logger.warning(f"Gemini API attempt {attempt} failed: {e}")
-            if attempt <= max_retries:
-                time.sleep(1.0 * attempt)
+            if attempt < max_retries:
+                time.sleep(0.5)
         except Exception as e:
             last_exception = GeminiAPIError(f"Unexpected Gemini API error: {e}")
             logger.warning(f"Gemini API unexpected error on attempt {attempt}: {e}")
-            if attempt <= max_retries:
-                time.sleep(1.0 * attempt)
+            if attempt < max_retries:
+                time.sleep(0.5)
 
     raise last_exception or GeminiAPIError("Gemini vision analysis failed after retries.")
 
 
-def embed_text(text: str, max_retries: int = 2) -> list[float]:
+def embed_text(text: str, max_retries: int = 1) -> list[float]:
     """
     Generates a dense vector embedding for input text using settings.EMBEDDING_MODEL.
     Validates input and output, handles transient errors with retries, and NEVER logs API keys.
@@ -140,7 +140,7 @@ def embed_text(text: str, max_retries: int = 2) -> list[float]:
     logger.info(f"Generating text embedding using model '{model_name}' (text length: {len(text)})")
 
     last_exception = None
-    for attempt in range(1, max_retries + 2):
+    for attempt in range(1, max_retries + 1):
         try:
             client = _get_client()
             response = client.models.embed_content(
@@ -171,13 +171,13 @@ def embed_text(text: str, max_retries: int = 2) -> list[float]:
         except GeminiAPIError as e:
             last_exception = e
             logger.warning(f"Gemini embedding API attempt {attempt} failed: {e}")
-            if attempt <= max_retries:
-                time.sleep(1.0 * attempt)
+            if attempt < max_retries:
+                time.sleep(0.5)
         except Exception as e:
             last_exception = GeminiAPIError(f"Unexpected Gemini embedding error: {e}")
             logger.warning(f"Gemini embedding unexpected error on attempt {attempt}: {e}")
-            if attempt <= max_retries:
-                time.sleep(1.0 * attempt)
+            if attempt < max_retries:
+                time.sleep(0.5)
 
     raise last_exception or GeminiAPIError("Gemini embedding generation failed after retries.")
 
