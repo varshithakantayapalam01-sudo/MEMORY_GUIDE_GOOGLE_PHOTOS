@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     TEMP_UPLOAD_DIR: str = "./tmp/research_sessions"
 
     FRONTEND_URL: str = "http://localhost:3000"
-    ALLOWED_ORIGINS: str = "http://localhost:3000"
+    ALLOWED_ORIGINS: str = "*"
 
     model_config = SettingsConfigDict(
         env_file=".env",

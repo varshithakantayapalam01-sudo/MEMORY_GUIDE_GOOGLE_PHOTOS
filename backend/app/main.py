@@ -56,14 +56,11 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configure CORS
-origins = settings.allowed_origins_list
-logger.info(f"Configuring CORS with allowed origins: {origins}")
-
+# Configure CORS - allow all origins so public Vercel deployment can query and upload
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
