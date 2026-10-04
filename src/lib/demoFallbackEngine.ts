@@ -79,7 +79,8 @@ export function createFallbackSession(mode: 'demo' | 'research'): string {
 }
 
 export function handleFallbackQuery(sessionId: string, query: string): StepResponseData {
-  const session = activeSessions[sessionId] || {
+  // ALWAYS initialize a completely clean session state for every query!
+  const session: FallbackSessionState = {
     sessionId,
     query,
     candidateIds: DEMO_PHOTOS.map(p => p.image_id),
@@ -88,23 +89,22 @@ export function handleFallbackQuery(sessionId: string, query: string): StepRespo
     questionsAsked: [],
     history: [29],
   };
-  session.query = query;
   activeSessions[sessionId] = session;
 
   const lower = query.toLowerCase();
 
-  // Determine initial candidate pool based on query terms
+  // Determine initial candidate pool based strictly on query terms
   let matching: DemoPhoto[] = [];
   if (lower.includes('birthday') || lower.includes('cake') || lower.includes('balloon')) {
     matching = DEMO_PHOTOS.filter(p => p.attributes.event === 'birthday');
-  } else if (lower.includes('beach') || lower.includes('vacation') || lower.includes('ocean') || lower.includes('wave')) {
+  } else if (lower.includes('beach') || lower.includes('vacation') || lower.includes('ocean') || lower.includes('wave') || lower.includes('sea')) {
     matching = DEMO_PHOTOS.filter(p => p.attributes.event === 'vacation');
-  } else if (lower.includes('festival') || lower.includes('traditional') || lower.includes('diwali') || lower.includes('wedding')) {
+  } else if (lower.includes('festival') || lower.includes('traditional') || lower.includes('diwali') || lower.includes('wedding') || lower.includes('saree')) {
     matching = DEMO_PHOTOS.filter(p => p.attributes.event === 'celebration');
-  } else if (lower.includes('park') || lower.includes('picnic') || lower.includes('frisbee') || lower.includes('dog')) {
+  } else if (lower.includes('park') || lower.includes('picnic') || lower.includes('frisbee') || lower.includes('dog') || lower.includes('grass')) {
     matching = DEMO_PHOTOS.filter(p => p.attributes.event === 'outdoor');
   } else {
-    // default subset of 12
+    // Default subset matching query length
     matching = DEMO_PHOTOS.slice(0, 12);
   }
 
@@ -114,11 +114,11 @@ export function handleFallbackQuery(sessionId: string, query: string): StepRespo
   const reserveCount = 29 - activeCount;
   session.history = [29, activeCount];
 
-  // Pick best discriminative question for candidate pool
-  let questionText = "Was a cake visible in the photo?";
-  let options = ["Yes", "No", "I don't remember"];
-  let dimTested = "cake_visible";
-  let subKey = "environment:cake";
+  // Pick best discriminative question for the candidate pool
+  let questionText = "Was this taken indoors or outdoors?";
+  let options = ["Indoors", "Outdoors", "I don't remember"];
+  let dimTested = "environment";
+  let subKey = "environment:location";
 
   if (matching.every(p => p.attributes.event === 'birthday')) {
     questionText = "Was this birthday celebration indoors or somewhere outside?";
@@ -135,6 +135,11 @@ export function handleFallbackQuery(sessionId: string, query: string): StepRespo
     options = ["Yes", "No", "I don't remember"];
     dimTested = "props";
     subKey = "props:sparklers_diyas";
+  } else if (matching.every(p => p.attributes.event === 'outdoor')) {
+    questionText = "Was there a dog or pet in the photo?";
+    options = ["Dog present", "No dog", "I don't remember"];
+    dimTested = "animals";
+    subKey = "pets:dog";
   }
 
   session.questionsAsked.push(questionText);
@@ -187,8 +192,8 @@ export function handleFallbackAnswer(sessionId: string, answerText: string): Ste
   } else if (ansLower.includes('solo')) {
     const filtered = candidates.filter(p => p.attributes.people === 'solo' || p.attributes.people === 'pair');
     if (filtered.length > 0) candidates = filtered;
-  } else if (ansLower.includes('yes')) {
-    const filtered = candidates.filter(p => p.attributes.cake || p.attributes.sparklers || p.attributes.diyas_flowers || p.attributes.balloons);
+  } else if (ansLower.includes('yes') || ansLower.includes('dog')) {
+    const filtered = candidates.filter(p => p.attributes.cake || p.attributes.sparklers || p.attributes.diyas_flowers || p.attributes.balloons || p.attributes.dog);
     if (filtered.length > 0) candidates = filtered;
   }
 
@@ -196,7 +201,7 @@ export function handleFallbackAnswer(sessionId: string, answerText: string): Ste
   const activeCount = Math.max(3, candidates.length);
   session.history.push(activeCount);
 
-  // If candidate pool is 3 to 6 photos, move to recognition phase!
+  // Move to recognition phase when narrowed to 3-6 photos
   if (candidates.length <= 6 || session.round >= 3) {
     const cData: CandidateData[] = candidates.slice(0, 6).map((p, idx) => ({
       imageId: p.image_id,
@@ -227,10 +232,6 @@ export function handleFallbackAnswer(sessionId: string, answerText: string): Ste
   // Next question
   let nextQuestion = "Do you remember if anyone was wearing pink or yellow?";
   let options = ["Pink or yellow", "Other colors", "I don't remember"];
-  if (ansLower.includes('indoors')) {
-    nextQuestion = "Were balloons visible in the background?";
-    options = ["Balloons present", "No balloons", "I don't remember"];
-  }
 
   session.questionsAsked.push(nextQuestion);
 
@@ -263,19 +264,23 @@ export function handleFallbackSelect(
   sessionId: string,
   payload: { selectionType: 'found' | 'close' | 'none'; imageId?: string; rejectedImageIds?: string[] }
 ): StepResponseData {
-  const session = activeSessions[sessionId] || {
-    sessionId,
-    query: "photo",
-    candidateIds: ["demo_001", "demo_002", "demo_003", "demo_004"],
-    rejectedIds: [],
-    round: 2,
-    questionsAsked: ["Was a cake visible?", "Was it indoors?"],
-    history: [29, 12, 4],
-  };
+  let session = activeSessions[sessionId];
+  if (!session) {
+    session = {
+      sessionId,
+      query: "beach photo",
+      candidateIds: ["demo_009", "demo_010", "demo_011", "demo_012"],
+      rejectedIds: [],
+      round: 2,
+      questionsAsked: ["Were you with a group?", "Was it outdoors?"],
+      history: [29, 7, 4],
+    };
+    activeSessions[sessionId] = session;
+  }
 
   if (payload.selectionType === 'found') {
-    const targetId = payload.imageId || session.candidateIds[0] || "demo_001";
-    const targetPhoto = DEMO_PHOTOS.find(p => p.image_id === targetId) || DEMO_PHOTOS[0];
+    const targetId = payload.imageId || session.candidateIds[0] || "demo_009";
+    const targetPhoto = DEMO_PHOTOS.find(p => p.image_id === targetId) || DEMO_PHOTOS[8];
 
     return {
       action: 'found',
@@ -298,10 +303,9 @@ export function handleFallbackSelect(
   }
 
   if (payload.selectionType === 'close') {
-    // Narrow further using target photo characteristics
     const refPhoto = DEMO_PHOTOS.find(p => p.image_id === payload.imageId);
     session.round += 1;
-    const remaining = DEMO_PHOTOS.filter(p => p.cluster_id === (refPhoto?.cluster_id || 'birthday')).slice(0, 4);
+    const remaining = DEMO_PHOTOS.filter(p => p.cluster_id === (refPhoto?.cluster_id || 'vacation')).slice(0, 4);
 
     return {
       action: 'show_candidates',
@@ -333,8 +337,8 @@ export function handleFallbackSelect(
     question: {
       questionId: 'q_' + session.round,
       round: session.round,
-      text: "Was this photo taken during the day or at night?",
-      options: ["Daytime", "Night time", "I don't remember"],
+      text: "Was this photo taken during the day or at sunset?",
+      options: ["Daytime", "Sunset", "I don't remember"],
       dimensionTested: "time_of_day",
       subattributeKey: "environment:time",
     },

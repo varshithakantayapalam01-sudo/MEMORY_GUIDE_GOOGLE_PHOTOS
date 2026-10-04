@@ -140,6 +140,26 @@ export default function HomePage() {
     }
     if (!currSessionId) return;
 
+    // Reset previous search state completely
+    setConfirmedClues([]);
+    setCandidates([]);
+    setNarrowingHistory([]);
+    setReferenceBanner(null);
+    setFoundSummary(undefined);
+    setSelectedImageId(undefined);
+
+    // Derive initial clues strictly from current query terms
+    const initialClues: string[] = [];
+    const lowerQ = query.toLowerCase();
+    if (lowerQ.includes('beach')) initialClues.push('Beach');
+    if (lowerQ.includes('vacation')) initialClues.push('Vacation');
+    if (lowerQ.includes('people')) initialClues.push('People');
+    if (lowerQ.includes('birthday')) initialClues.push('Birthday');
+    if (lowerQ.includes('festival')) initialClues.push('Festival');
+    if (lowerQ.includes('traditional')) initialClues.push('Traditional');
+    if (lowerQ.includes('park') || lowerQ.includes('picnic')) initialClues.push('Park');
+    setConfirmedClues(initialClues);
+
     setLoading(true);
     try {
       const res = await submitQuery(currSessionId, query);
@@ -147,7 +167,7 @@ export default function HomePage() {
         const stepData = res.data;
         if (stepData.progress) {
           setProgress(stepData.progress);
-          setNarrowingHistory([stepData.progress.activeCandidates + stepData.progress.reserveCandidates]);
+          setNarrowingHistory([29, stepData.progress.activeCandidates]);
         } else {
           setNarrowingHistory([29, 12]);
         }

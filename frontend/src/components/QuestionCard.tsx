@@ -23,7 +23,6 @@ export default function QuestionCard({
   referenceBanner,
 }: QuestionCardProps) {
   const options = question.options || ["Yes", "No", "I don't remember"];
-
   const currentCount = progress?.activeCandidates ?? narrowingHistory[narrowingHistory.length - 1] ?? 12;
 
   return (
@@ -75,16 +74,16 @@ export default function QuestionCard({
         </span>
       </div>
 
-      {/* Confirmed / Uncertain Clue Chips */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-        <span className="clue-chip confirmed">Birthday ✓</span>
-        {confirmedClues.map((clue, idx) => (
-          <span key={idx} className="clue-chip confirmed">
-            {clue}
-          </span>
-        ))}
-        <span className="clue-chip">Pink clothing ?</span>
-      </div>
+      {/* Dynamic Confirmed / Identified Clue Chips */}
+      {confirmedClues.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+          {confirmedClues.map((clue, idx) => (
+            <span key={idx} className="clue-chip confirmed">
+              {clue} ✓
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Question Card */}
       <div style={{
@@ -149,7 +148,6 @@ export default function QuestionCard({
             animation: 'spin 0.8s linear infinite'
           }} />
           <span>One detail could narrow this down…</span>
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       )}
     </div>
