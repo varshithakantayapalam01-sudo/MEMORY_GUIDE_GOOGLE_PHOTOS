@@ -12,27 +12,33 @@ logger = logging.getLogger("memory_guide.candidate_retriever")
 def cosine_similarity(vec_a: List[float], vec_b: List[float]) -> float:
     """
     Computes deterministic cosine similarity between two float vectors.
-    Returns float in [-1.0, 1.0]. Returns 0.0 if either vector is zero norm.
+    Returns float in [-1.0, 1.0]. Returns 0.0 if either vector is zero norm or invalid.
     """
     if not vec_a or not vec_b or len(vec_a) != len(vec_b):
         return 0.0
 
-    dot_product = sum(a * b for a, b in zip(vec_a, vec_b))
-    norm_a = math.sqrt(sum(a * a for a in vec_a))
-    norm_b = math.sqrt(sum(b * b for b in vec_b))
+    try:
+        dot_product = sum(a * b for a, b in zip(vec_a, vec_b))
+        norm_a = math.sqrt(sum(a * a for a in vec_a))
+        norm_b = math.sqrt(sum(b * b for b in vec_b))
 
-    if norm_a == 0.0 or norm_b == 0.0:
+        if norm_a == 0.0 or norm_b == 0.0 or math.isnan(norm_a) or math.isnan(norm_b):
+            return 0.0
+
+        sim = dot_product / (norm_a * norm_b)
+        if math.isnan(sim) or math.isinf(sim):
+            return 0.0
+        return max(-1.0, min(1.0, sim))
+    except Exception:
         return 0.0
-
-    sim = dot_product / (norm_a * norm_b)
-    # Clamp for numerical stability
-    return max(-1.0, min(1.0, sim))
 
 
 def normalize_cosine_score(raw_sim: float) -> float:
     """
     Normalizes cosine similarity from [-1, 1] to [0, 1] interval.
     """
+    if math.isnan(raw_sim) or math.isinf(raw_sim):
+        return 0.5
     return max(0.0, min(1.0, (raw_sim + 1.0) / 2.0))
 
 

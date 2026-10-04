@@ -1,4 +1,5 @@
 from __future__ import annotations
+import math
 import logging
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
@@ -40,16 +41,28 @@ router = APIRouter()
 MAX_ROUNDS = 5
 
 
+def safe_float(val: Any) -> float:
+    if val is None:
+        return 0.0
+    try:
+        f = float(val)
+        if math.isnan(f) or math.isinf(f):
+            return 0.0
+        return f
+    except Exception:
+        return 0.0
+
+
 def format_candidate_for_recognition(c: CandidateEntry, rank: int, session_id: str) -> Dict[str, Any]:
     """Helper to format candidate for recognition display."""
     lib_item = library_service.get_library_image(session_id, c.image_id)
-    url = lib_item.image_url if lib_item else f"/images/demo-photos/{c.image_id}.jpg"
+    url = (lib_item.image_url if lib_item and lib_item.image_url else f"/images/demo-photos/{c.image_id}.jpg")
     return {
         "imageId": c.image_id,
         "rank": rank,
-        "score": c.score,
-        "semanticScore": c.semantic_score,
-        "structuredScore": c.structured_score,
+        "score": safe_float(c.score),
+        "semanticScore": safe_float(c.semantic_score),
+        "structuredScore": safe_float(c.structured_score),
         "imageUrl": url,
     }
 
