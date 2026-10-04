@@ -72,7 +72,7 @@ export default function ResearchUploadView({
           Upload up to 30 of your personal photos to test Memory Guide AI retrieval on your own library.
         </p>
 
-        {uploadStatus === 'idle' && (
+        {(uploadStatus === 'idle' || uploadStatus === 'error') && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <label style={{
               border: '2px dashed #CBD5E1',
@@ -94,7 +94,7 @@ export default function ResearchUploadView({
                 {selectedFiles.length > 0 ? `${selectedFiles.length} photos selected` : 'Select up to 30 photos'}
               </div>
               <div style={{ fontSize: '12px', color: '#94A3B8', marginTop: '4px' }}>
-                JPG, PNG, WebP supported
+                JPG, PNG, WebP, HEIC supported
               </div>
             </label>
 
@@ -105,7 +105,7 @@ export default function ResearchUploadView({
                 onClick={handleStartUpload}
                 disabled={loading}
               >
-                Upload & Process Library
+                {loading ? 'Uploading…' : 'Upload & Process Library'}
               </button>
             )}
           </div>

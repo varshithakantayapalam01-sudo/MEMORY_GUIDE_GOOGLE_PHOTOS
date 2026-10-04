@@ -12,8 +12,19 @@ from app.services import session_manager, library_service
 logger = logging.getLogger("memory_guide.upload_service")
 
 # Validation Constants
-ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
-ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/webp"}
+ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"}
+ALLOWED_MIME_TYPES = {
+    "image/jpeg",
+    "image/jpg",
+    "image/pjpeg",
+    "image/png",
+    "image/x-png",
+    "image/webp",
+    "image/heic",
+    "image/heif",
+    "application/octet-stream",
+    "",
+}
 MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB limit per image
 MAX_IMAGES_PER_SESSION = 30
 
@@ -55,19 +66,38 @@ def validate_file(file: UploadFile, current_count: int, total_batch_count: int) 
     # 1. Filename & extension check
     filename = file.filename or ""
     ext = os.path.splitext(filename)[1].lower()
-    if not ext or ext not in ALLOWED_EXTENSIONS:
+
+    # Default fallback if extension missing
+    if not ext:
+        if "png" in (file.content_type or ""):
+            ext = ".png"
+        elif "webp" in (file.content_type or ""):
+            ext = ".webp"
+        else:
+            ext = ".jpg"
+
+    if ext not in ALLOWED_EXTENSIONS:
         raise UploadValidationError(
             "INVALID_FILE_EXTENSION",
-            f"File extension '{ext}' is not supported. Allowed formats: .jpg, .jpeg, .png, .webp"
+            f"File format '{ext}' is not supported. Allowed formats: JPG, JPEG, PNG, WebP, HEIC."
         )
 
-    # 2. Content-Type check
+    # 2. Content-Type check & normalization
     content_type = (file.content_type or "").lower()
-    if content_type not in ALLOWED_MIME_TYPES:
+    if content_type not in ALLOWED_MIME_TYPES and not content_type.startswith("image/"):
         raise UploadValidationError(
             "INVALID_MIME_TYPE",
-            f"MIME type '{content_type}' is not supported. Allowed MIME types: image/jpeg, image/png, image/webp"
+            f"MIME type '{content_type}' is not supported. Please upload a standard image file."
         )
+
+    # Normalize content_type for serving
+    if not content_type or content_type == "application/octet-stream" or content_type == "image/jpg" or content_type == "image/pjpeg":
+        if ext in {".png"}:
+            content_type = "image/png"
+        elif ext in {".webp"}:
+            content_type = "image/webp"
+        else:
+            content_type = "image/jpeg"
 
     return ext, content_type
 

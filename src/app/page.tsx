@@ -42,6 +42,7 @@ export default function HomePage() {
   const [showResearchUpload, setShowResearchUpload] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'ready' | 'error'>('idle');
   const [uploadedCount, setUploadedCount] = useState<number>(0);
+  const [uploadErrorMessage, setUploadErrorMessage] = useState<string | undefined>(undefined);
 
   // Active Retrieval Session State
   const [currentQuestion, setCurrentQuestion] = useState<QuestionData | undefined>(undefined);
@@ -102,6 +103,7 @@ export default function HomePage() {
 
   // Upload Research Photos
   const handleUploadPhotos = async (files: File[]) => {
+    setUploadErrorMessage(undefined);
     let currSessionId = sessionId;
     if (!currSessionId || mode === 'demo') {
       const sessRes = await createSession('research');
@@ -109,9 +111,17 @@ export default function HomePage() {
         currSessionId = sessRes.data.sessionId;
         setSessionId(currSessionId);
         setMode('research');
+      } else if (sessRes.error) {
+        setUploadErrorMessage(sessRes.error.message);
+        setUploadStatus('error');
+        return;
       }
     }
-    if (!currSessionId) return;
+    if (!currSessionId) {
+      setUploadErrorMessage("Could not initialize research session. Please check connection.");
+      setUploadStatus('error');
+      return;
+    }
 
     setLoading(true);
     setUploadStatus('uploading');
@@ -122,10 +132,11 @@ export default function HomePage() {
         setUploadStatus('ready');
         setMode('research');
       } else if (res.error) {
-        alert(res.error.message);
+        setUploadErrorMessage(res.error.message);
         setUploadStatus('error');
       }
     } catch (err: any) {
+      setUploadErrorMessage(err.message || "Failed to upload photos.");
       setUploadStatus('error');
     } finally {
       setLoading(false);
@@ -418,6 +429,7 @@ export default function HomePage() {
           loading={loading}
           uploadStatus={uploadStatus}
           imageCount={uploadedCount}
+          errorMessage={uploadErrorMessage}
         />
       )}
 

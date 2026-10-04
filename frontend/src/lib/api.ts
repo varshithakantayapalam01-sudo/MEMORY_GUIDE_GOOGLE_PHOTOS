@@ -105,6 +105,14 @@ async function handleResponse<T>(response: Response): Promise<T> {
       const errJson = await response.json();
       if (errJson.error?.message) {
         errMessage = errJson.error.message;
+      } else if (errJson.detail) {
+        if (typeof errJson.detail === 'string') {
+          errMessage = errJson.detail;
+        } else if (Array.isArray(errJson.detail)) {
+          errMessage = errJson.detail.map((d: any) => `${d.loc ? d.loc.join('.') : 'error'}: ${d.msg}`).join(', ');
+        } else {
+          errMessage = JSON.stringify(errJson.detail);
+        }
       }
     } catch (_) {}
     throw new Error(errMessage);
@@ -129,13 +137,13 @@ export async function createSession(mode: 'demo' | 'research'): Promise<APIRespo
       body: JSON.stringify({ mode }),
     });
     return await handleResponse(res);
-  } catch (err) {
+  } catch (err: any) {
     console.warn("Backend unavailable, using fallback strategy:", err);
     if (mode === 'research') {
       return {
         success: false,
         data: null,
-        error: { code: 'BACKEND_UNAVAILABLE', message: "We couldn't search your uploaded photos. Please try again." }
+        error: { code: 'BACKEND_UNAVAILABLE', message: err.message || "We couldn't search your uploaded photos. Please try again." }
       };
     }
     const fallbackId = createFallbackSession(mode);
@@ -160,7 +168,7 @@ export async function uploadPhotos(sessionId: string, files: File[]): Promise<AP
     return {
       success: false,
       data: null,
-      error: { code: 'UPLOAD_FAILED', message: "Failed to upload photos to backend. Please check network connection." }
+      error: { code: 'UPLOAD_FAILED', message: err.message || "Failed to upload photos to backend. Please check network connection." }
     };
   }
 }
