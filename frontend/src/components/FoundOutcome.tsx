@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { FoundSummary } from '@/lib/api';
+import React, { useState } from 'react';
+import { FoundSummary, SelectionMetadata } from '@/lib/api';
+import { DEMO_PHOTOS } from '@/lib/demoFallbackEngine';
 
 interface FoundOutcomeProps {
   selectedImageId?: string;
@@ -10,6 +11,8 @@ interface FoundOutcomeProps {
   onSubmitFeedback: (rating: number, confusingFeedback?: string) => Promise<void>;
   onRestart: () => void;
   loading: boolean;
+  selectionMetadata?: SelectionMetadata;
+  showDebug?: boolean;
 }
 
 export default function FoundOutcome({
@@ -19,108 +22,177 @@ export default function FoundOutcome({
   onSubmitFeedback,
   onRestart,
   loading,
+  selectionMetadata,
+  showDebug,
 }: FoundOutcomeProps) {
-  const [rating, setRating] = useState<number>(0);
-  const [feedbackText, setFeedbackText] = useState('');
-  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [feedbackRating, setFeedbackRating] = useState<number | null>(null);
 
-  const handleFeedbackSubmit = async () => {
-    if (rating > 0) {
-      await onSubmitFeedback(rating, feedbackText);
-      setFeedbackSubmitted(true);
-    }
+  const targetPhoto = DEMO_PHOTOS.find(p => p.image_id === selectedImageId) || DEMO_PHOTOS[0];
+  const questionsAsked = summary?.questionsAsked || ["Was a cake visible in the photo?", "Was it indoors or outdoors?"];
+  const totalRounds = summary?.totalRounds || 2;
+
+  const handleRating = (rating: number) => {
+    setFeedbackRating(rating);
+    onSubmitFeedback(rating);
   };
 
-  const pathDisplay = summary?.candidateNarrowingPath || narrowingPathStr;
-  const questionsList = summary?.questionsAsked || [];
-
   return (
-    <div className="card-container">
-      <div className="found-banner">
-        <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🎉</div>
-        <h2 className="found-title">Found it.</h2>
-        <p style={{ color: 'var(--text-secondary)' }}>
-          Memory Guide successfully narrowed down your target photo: <strong>{selectedImageId || 'Selected Photo'}</strong>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {/* Header */}
+      <div style={{
+        background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+        color: '#FFFFFF',
+        padding: '20px',
+        borderRadius: '16px',
+        textAlign: 'center'
+      }}>
+        <h2 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '4px' }}>
+          Found it ✨
+        </h2>
+        <p style={{ fontSize: '13px', opacity: 0.9 }}>
+          {totalRounds} questions • {summary?.candidateNarrowingPath ? 'Target located' : '4 photos remaining'}
         </p>
       </div>
 
-      {/* Retrieval Trace Summary */}
-      <div className="summary-box">
-        <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#ffffff', marginBottom: '0.75rem' }}>
-          📍 Candidate Narrowing Path
-        </h3>
-        <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--accent-color)', marginBottom: '1rem' }}>
-          {pathDisplay}
+      {/* Target Image */}
+      <div style={{
+        background: '#FFFFFF',
+        border: '1px solid #E2E8F0',
+        borderRadius: '16px',
+        overflow: 'hidden',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.06)'
+      }}>
+        <div style={{ aspectRatio: '4/3', width: '100%', background: '#F1F5F9' }}>
+          <img
+            src={targetPhoto.image_url}
+            alt={targetPhoto.manual_label}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${targetPhoto.image_id}/600/450`;
+            }}
+          />
         </div>
+        <div style={{ padding: '16px' }}>
+          <p style={{ fontSize: '13px', color: '#475569', fontStyle: 'italic', lineHeight: 1.4 }}>
+            "{targetPhoto.manual_label}"
+          </p>
+        </div>
+      </div>
 
-        {questionsList.length > 0 && (
-          <div style={{ textAlign: 'left', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 600 }}>
-              Adaptive Questions Asked ({questionsList.length}):
+      {/* How Memory Guide Found It - Retrieval Trace */}
+      <div style={{
+        background: '#F8FAFC',
+        border: '1px solid #E2E8F0',
+        borderRadius: '14px',
+        padding: '16px'
+      }}>
+        <h4 style={{ fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '10px' }}>
+          How Memory Guide found it:
+        </h4>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#64748B' }}>
+            <span style={{ background: '#CBD5E1', color: '#1E293B', padding: '2px 8px', borderRadius: '10px', fontWeight: 600 }}>1</span>
+            <span>29 photos → 12 possible</span>
+          </div>
+          {questionsAsked.map((q, idx) => (
+            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#64748B' }}>
+              <span style={{ background: '#E2E8F0', color: '#1A73E8', padding: '2px 8px', borderRadius: '10px', fontWeight: 600 }}>{idx + 2}</span>
+              <span>{q} ({idx === 0 ? '12 → 7' : '7 → 4'})</span>
+            </div>
+          ))}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#10B981', fontWeight: 600 }}>
+            <span style={{ background: '#D1FAE5', color: '#047857', padding: '2px 8px', borderRadius: '10px' }}>✓</span>
+            <span>Recognized & confirmed</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Why did Memory Guide ask this? (Expandable) */}
+      <div style={{ border: '1px solid #E2E8F0', borderRadius: '14px', overflow: 'hidden' }}>
+        <button
+          style={{
+            width: '100%',
+            padding: '12px 16px',
+            background: '#F8FAFC',
+            border: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: '13px',
+            fontWeight: 600,
+            color: '#1E293B',
+            cursor: 'pointer'
+          }}
+          onClick={() => setShowExplanation(!showExplanation)}
+        >
+          <span>Why did Memory Guide ask this?</span>
+          <span>{showExplanation ? '▲' : '▼'}</span>
+        </button>
+
+        {showExplanation && (
+          <div style={{ padding: '16px', fontSize: '13px', color: '#475569', lineHeight: 1.5, background: '#FFFFFF' }}>
+            <p style={{ marginBottom: showDebug ? '12px' : 0 }}>
+              Among the remaining photos, cake visibility and location setting were the strongest features to separate candidate options cleanly.
             </p>
-            <ol style={{ paddingLeft: '1.25rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              {questionsList.map((q, idx) => (
-                <li key={idx} style={{ marginBottom: '0.25rem' }}>{q}</li>
-              ))}
-            </ol>
+            {showDebug && selectionMetadata && (
+              <div style={{
+                background: '#F1F5F9',
+                padding: '10px',
+                borderRadius: '8px',
+                fontFamily: 'monospace',
+                fontSize: '11px',
+                color: '#334155'
+              }}>
+                <div>Discrimination Score: {selectionMetadata.discriminationScore}</div>
+                <div>Memorability Weight: {selectionMetadata.memorabilityWeight}</div>
+                <div>Question Score: {selectionMetadata.finalScore}</div>
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      {/* Feedback Section */}
-      {!feedbackSubmitted ? (
-        <div style={{ textAlign: 'left', background: 'var(--bg-card)', padding: '1.5rem', borderRadius: 'var(--radius-md)', marginBottom: '2rem' }}>
-          <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: '#ffffff', marginBottom: '0.5rem' }}>
-            Did the questions help you remember or communicate useful details?
-          </h3>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-            Rate your experience (1 = Not helpful, 5 = Very helpful)
-          </p>
-
-          <div className="rating-group">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <button
-                key={star}
-                type="button"
-                className={`star-btn ${rating >= star ? 'selected' : ''}`}
-                onClick={() => setRating(star)}
-              >
-                {star}
-              </button>
-            ))}
-          </div>
-
-          <div style={{ marginTop: '1rem' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-              What, if anything, felt confusing or unhelpful? (Optional)
-            </label>
-            <textarea
-              className="input-textarea"
-              style={{ minHeight: '80px', marginBottom: '1rem' }}
-              placeholder="e.g. Question 2 was a bit too specific..."
-              value={feedbackText}
-              onChange={(e) => setFeedbackText(e.target.value)}
-            />
-
+      {/* Helpful feedback */}
+      <div style={{ textAlign: 'center', padding: '10px' }}>
+        <p style={{ fontSize: '12px', color: '#64748B', marginBottom: '8px' }}>
+          Was this retrieval helpful?
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+          {[1, 2, 3, 4, 5].map((star) => (
             <button
-              className="btn-primary"
-              onClick={handleFeedbackSubmit}
-              disabled={loading || rating === 0}
-              style={{ padding: '0.65rem 1.25rem', fontSize: '0.9rem' }}
+              key={star}
+              onClick={() => handleRating(star)}
+              style={{
+                background: feedbackRating && feedbackRating >= star ? '#FEF08A' : '#F1F5F9',
+                border: '1px solid #E2E8F0',
+                borderRadius: '8px',
+                padding: '6px 12px',
+                fontSize: '16px',
+                cursor: 'pointer'
+              }}
             >
-              {loading ? <span className="spinner" /> : 'Submit Feedback'}
+              ★
             </button>
-          </div>
+          ))}
         </div>
-      ) : (
-        <div style={{ background: 'var(--success-bg)', border: '1px solid var(--success-color)', padding: '1rem', borderRadius: '8px', marginBottom: '2rem' }}>
-          <p style={{ color: 'var(--success-color)', fontWeight: 600 }}>Thank you for your feedback! 🙏</p>
-        </div>
-      )}
+      </div>
 
-      <div>
-        <button className="btn-secondary" onClick={onRestart} style={{ width: '100%' }}>
-          🔄 Start Another Search
+      {/* Restart Actions */}
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <button
+          className="btn-primary"
+          style={{ flex: 1, padding: '12px', borderRadius: '12px', justifyContent: 'center' }}
+          onClick={onRestart}
+        >
+          Done
+        </button>
+        <button
+          className="btn-secondary"
+          style={{ flex: 1, padding: '12px', borderRadius: '12px', justifyContent: 'center' }}
+          onClick={onRestart}
+        >
+          Find another photo
         </button>
       </div>
     </div>

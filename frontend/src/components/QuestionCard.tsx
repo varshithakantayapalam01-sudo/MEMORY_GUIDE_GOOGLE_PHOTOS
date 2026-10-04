@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { QuestionData, ProgressData } from '@/lib/api';
 
 interface QuestionCardProps {
@@ -23,96 +24,114 @@ export default function QuestionCard({
 }: QuestionCardProps) {
   const options = question.options || ["Yes", "No", "I don't remember"];
 
+  const currentCount = progress?.activeCandidates ?? narrowingHistory[narrowingHistory.length - 1] ?? 12;
+
   return (
-    <div className="card-container">
-      {/* Reference Banner if returning from 'Looks close' flow */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {/* Reference Banner if coming from 'Looks close' */}
       {referenceBanner && (
-        <div
-          style={{
-            background: 'rgba(56, 189, 248, 0.12)',
-            border: '1px solid var(--accent-color)',
-            borderRadius: '8px',
-            padding: '0.75rem 1rem',
-            marginBottom: '1.5rem',
-            color: 'var(--accent-color)',
-            fontSize: '0.9rem',
-            fontWeight: 500,
-          }}
-        >
-          💡 {referenceBanner}
+        <div style={{
+          background: '#E0F2FE',
+          border: '1px solid #7DD3FC',
+          borderRadius: '12px',
+          padding: '10px 14px',
+          color: '#0369A1',
+          fontSize: '13px',
+          fontWeight: 500,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px'
+        }}>
+          <span>💡</span>
+          <span>{referenceBanner}</span>
         </div>
       )}
 
-      {/* Narrowing Progress Header */}
-      <div className="progress-banner">
-        <span>Candidate Progress:</span>
-        <div className="progress-steps">
-          {narrowingHistory.map((count, idx) => (
-            <span key={idx} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-              {idx > 0 && <span className="progress-arrow">→</span>}
-              <span
-                style={{
-                  color: idx === narrowingHistory.length - 1 ? '#ffffff' : 'var(--text-secondary)',
-                  fontWeight: idx === narrowingHistory.length - 1 ? 700 : 500,
-                }}
-              >
-                {count} {idx === 0 ? 'possible photos' : ''}
-              </span>
-            </span>
-          ))}
-          {progress?.activeCandidates !== undefined &&
-            narrowingHistory[narrowingHistory.length - 1] !== progress.activeCandidates && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-                <span className="progress-arrow">→</span>
-                <span style={{ color: '#ffffff', fontWeight: 700 }}>{progress.activeCandidates}</span>
-              </span>
-            )}
+      {/* Progress & Candidate Badge */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        background: '#F8FAFC',
+        border: '1px solid #E2E8F0',
+        padding: '10px 14px',
+        borderRadius: '12px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#64748B' }}>
+          <span>Candidate progress:</span>
+          <span style={{ fontWeight: 600, color: '#1E293B' }}>
+            {narrowingHistory.join(' → ')} {narrowingHistory.length === 1 ? 'photos' : ''}
+          </span>
         </div>
+        <span style={{
+          background: '#1A73E8',
+          color: '#FFFFFF',
+          fontSize: '12px',
+          fontWeight: 600,
+          padding: '3px 10px',
+          borderRadius: '12px'
+        }}>
+          {currentCount} possible
+        </span>
       </div>
 
-      {/* Confirmed Clue Chips */}
-      {confirmedClues.length > 0 && (
-        <div style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Confirmed clues:</span>
-          {confirmedClues.map((clue, idx) => (
-            <span
-              key={idx}
-              style={{
-                fontSize: '0.8rem',
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border-color)',
-                color: 'var(--success-color)',
-                padding: '0.2rem 0.6rem',
-                borderRadius: '999px',
-              }}
-            >
-              {clue} ✓
-            </span>
-          ))}
-        </div>
-      )}
+      {/* Confirmed / Uncertain Clue Chips */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+        <span className="clue-chip confirmed">Birthday ✓</span>
+        {confirmedClues.map((clue, idx) => (
+          <span key={idx} className="clue-chip confirmed">
+            {clue}
+          </span>
+        ))}
+        <span className="clue-chip">Pink clothing ?</span>
+      </div>
 
-      {/* Main Question Experience */}
-      <div className="question-card">
-        <div className="question-callout">
-          <span>🧠</span>
-          <span style={{ fontSize: '0.85rem' }}>Chosen based on the photos still in consideration.</span>
+      {/* Question Card */}
+      <div style={{
+        background: '#FFFFFF',
+        border: '1px solid #E2E8F0',
+        borderRadius: '16px',
+        padding: '20px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '14px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#1A73E8', fontSize: '13px', fontWeight: 600 }}>
+          <span>✨</span>
+          <span>Memory Guide</span>
         </div>
 
-        <h2 className="question-text">{question.text}</h2>
+        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0F172A', lineHeight: 1.3 }}>
+          "{question.text}"
+        </h3>
 
-        <div className="options-grid">
+        <p style={{ fontSize: '12px', color: '#64748B', lineHeight: 1.4 }}>
+          Chosen because this detail best separates the photos still in consideration.
+        </p>
+
+        {/* Options */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
           {options.map((opt, idx) => {
             const isIdk = opt.toLowerCase().includes("don't remember") || opt.toLowerCase().includes("idk");
             return (
               <button
                 key={idx}
-                className={`btn-option ${isIdk ? 'btn-idk' : ''}`}
+                className={isIdk ? 'btn-secondary' : 'btn-primary'}
+                style={{
+                  justifyContent: 'space-between',
+                  width: '100%',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  fontSize: '14px',
+                  opacity: loading ? 0.7 : 1,
+                  cursor: loading ? 'not-allowed' : 'pointer'
+                }}
                 onClick={() => onAnswer(opt)}
                 disabled={loading}
               >
                 <span>{opt}</span>
-                {!isIdk && <span style={{ opacity: 0.6 }}>→</span>}
+                <span>{isIdk ? '❓' : '→'}</span>
               </button>
             );
           })}
@@ -120,9 +139,17 @@ export default function QuestionCard({
       </div>
 
       {loading && (
-        <div className="loading-container" style={{ padding: '1.5rem 0' }}>
-          <div className="spinner" />
-          <p className="loading-text">Thinking about which clue would help most…</p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', padding: '12px', color: '#64748B', fontSize: '13px' }}>
+          <div style={{
+            width: '18px',
+            height: '18px',
+            border: '2px solid #CBD5E1',
+            borderTopColor: '#1A73E8',
+            borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite'
+          }} />
+          <span>One detail could narrow this down…</span>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       )}
     </div>

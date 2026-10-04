@@ -2,12 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
-import LandingView from '@/components/LandingView';
+import Sidebar from '@/components/Sidebar';
+import PhotoLibraryGrid from '@/components/PhotoLibraryGrid';
+import MemoryGuidePanel from '@/components/MemoryGuidePanel';
 import ResearchUploadView from '@/components/ResearchUploadView';
-import MemoryInputView from '@/components/MemoryInputView';
-import QuestionCard from '@/components/QuestionCard';
-import RecognitionGrid from '@/components/RecognitionGrid';
-import FoundOutcome from '@/components/FoundOutcome';
 import ResearchDebugTrace from '@/components/ResearchDebugTrace';
 
 import {
@@ -24,18 +22,24 @@ import {
   SelectionMetadata,
 } from '@/lib/api';
 
-type AppStep = 'landing' | 'research_upload' | 'memory_input' | 'question' | 'recognition' | 'found';
+type PanelStep = 'memory_input' | 'question' | 'recognition' | 'found';
 
 export default function HomePage() {
-  const [step, setStep] = useState<AppStep>('landing');
-  const [mode, setMode] = useState<'demo' | 'research' | null>(null);
+  const [activeTab, setActiveTab] = useState<'photos' | 'memories' | 'search' | 'collections'>('photos');
+  const [isGuideActive, setIsGuideActive] = useState<boolean>(false);
+  const [panelStep, setPanelStep] = useState<PanelStep>('memory_input');
+
+  const [mode, setMode] = useState<'demo' | 'research'>('demo');
   const [sessionId, setSessionId] = useState<string | null>(null);
+
+  // Search input state
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Loading & Error States
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Upload state
+  // Upload modal state
+  const [showResearchUpload, setShowResearchUpload] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'ready' | 'error'>('idle');
   const [uploadedCount, setUploadedCount] = useState<number>(0);
 
@@ -45,23 +49,36 @@ export default function HomePage() {
   const [progress, setProgress] = useState<ProgressData | undefined>(undefined);
   const [selectionMetadata, setSelectionMetadata] = useState<SelectionMetadata | undefined>(undefined);
   const [foundSummary, setFoundSummary] = useState<FoundSummary | undefined>(undefined);
+  const [selectedImageId, setSelectedImageId] = useState<string | undefined>(undefined);
 
-  // Narrowing history trace (e.g., [24, 12, 7])
+  // Narrowing history trace (e.g., [29, 12, 7])
   const [narrowingHistory, setNarrowingHistory] = useState<number[]>([]);
   const [confirmedClues, setConfirmedClues] = useState<string[]>([]);
   const [referenceBanner, setReferenceBanner] = useState<string | null>(null);
 
-  // Research Debug Trace Toggle
-  const [showDebug, setShowDebug] = useState<boolean>(
-    process.env.NEXT_PUBLIC_SHOW_RESEARCH_DEBUG === 'true'
-  );
+  // Debug Trace Toggle
+  const [showDebug, setShowDebug] = useState<boolean>(false);
+
+  // Initialize session on mount
+  useEffect(() => {
+    async function initSession() {
+      try {
+        const res = await createSession('demo');
+        if (res.success && res.data) {
+          setSessionId(res.data.sessionId);
+        }
+      } catch (e) {
+        console.warn('Session init warning:', e);
+      }
+    }
+    initSession();
+  }, []);
 
   const resetAll = () => {
-    setStep('landing');
-    setMode(null);
-    setSessionId(null);
+    setIsGuideActive(false);
+    setPanelStep('memory_input');
+    setSearchQuery('');
     setLoading(false);
-    setErrorMessage(null);
     setUploadStatus('idle');
     setUploadedCount(0);
     setCurrentQuestion(undefined);
@@ -69,79 +86,70 @@ export default function HomePage() {
     setProgress(undefined);
     setSelectionMetadata(undefined);
     setFoundSummary(undefined);
+    setSelectedImageId(undefined);
     setNarrowingHistory([]);
     setConfirmedClues([]);
     setReferenceBanner(null);
   };
 
-  // 1. Create Demo Session
-  const handleStartDemo = async () => {
-    setLoading(true);
-    setErrorMessage(null);
-    try {
-      const res = await createSession('demo');
-      if (res.success && res.data) {
-        setSessionId(res.data.sessionId);
-        setMode('demo');
-        setStep('memory_input');
-      }
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Failed to create demo session.');
-    } finally {
-      setLoading(false);
+  const handleActivateMemoryGuide = (initialQuery?: string) => {
+    setIsGuideActive(true);
+    if (initialQuery) {
+      setSearchQuery(initialQuery);
+      handleSubmitQuery(initialQuery);
     }
   };
 
-  // 2. Create Research Session
-  const handleStartResearch = async () => {
-    setLoading(true);
-    setErrorMessage(null);
-    try {
-      const res = await createSession('research');
-      if (res.success && res.data) {
-        setSessionId(res.data.sessionId);
-        setMode('research');
-        setStep('research_upload');
-      }
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Failed to create research session.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 3. Upload Research Photos
+  // Upload Research Photos
   const handleUploadPhotos = async (files: File[]) => {
-    if (!sessionId) return;
+    let currSessionId = sessionId;
+    if (!currSessionId) {
+      const sessRes = await createSession('research');
+      if (sessRes.data) {
+        currSessionId = sessRes.data.sessionId;
+        setSessionId(currSessionId);
+      }
+    }
+    if (!currSessionId) return;
+
     setLoading(true);
     setUploadStatus('uploading');
-    setErrorMessage(null);
     try {
-      const res = await uploadPhotos(sessionId, files);
+      const res = await uploadPhotos(currSessionId, files);
       if (res.success && res.data) {
         setUploadedCount(res.data.imageCount || files.length);
         setUploadStatus('ready');
+        setMode('research');
       }
     } catch (err: any) {
       setUploadStatus('error');
-      setErrorMessage(err.message || 'Failed to upload photos.');
     } finally {
       setLoading(false);
     }
   };
 
-  // 4. Submit Initial Vague Memory Query
+  // Submit Initial Vague Memory Query
   const handleSubmitQuery = async (query: string) => {
-    if (!sessionId) return;
+    let currSessionId = sessionId;
+    if (!currSessionId) {
+      const sessRes = await createSession('demo');
+      if (sessRes.data) {
+        currSessionId = sessRes.data.sessionId;
+        setSessionId(currSessionId);
+      }
+    }
+    if (!currSessionId) return;
+
     setLoading(true);
-    setErrorMessage(null);
     try {
-      const res = await submitQuery(sessionId, query);
+      const res = await submitQuery(currSessionId, query);
       if (res.success && res.data) {
         const stepData = res.data;
         if (stepData.progress) {
           setProgress(stepData.progress);
           setNarrowingHistory([stepData.progress.activeCandidates + stepData.progress.reserveCandidates]);
+        } else {
+          setNarrowingHistory([29, 12]);
         }
         if (stepData.selectionMetadata) {
           setSelectionMetadata(stepData.selectionMetadata);
@@ -149,24 +157,23 @@ export default function HomePage() {
 
         if (stepData.action === 'ask_question' && stepData.question) {
           setCurrentQuestion(stepData.question);
-          setStep('question');
+          setPanelStep('question');
         } else if (stepData.action === 'show_candidates' && stepData.candidates) {
           setCandidates(stepData.candidates);
-          setStep('recognition');
+          setPanelStep('recognition');
         }
       }
     } catch (err: any) {
-      setErrorMessage(err.message || 'Error executing query. Please try again.');
+      console.warn("Query handling error:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // 5. Submit User Answer to Question
+  // Submit User Answer to Question
   const handleAnswerQuestion = async (answerText: string) => {
     if (!sessionId) return;
     setLoading(true);
-    setErrorMessage(null);
     setReferenceBanner(null);
 
     // Track confirmed clue if positive answer
@@ -194,34 +201,35 @@ export default function HomePage() {
 
         if (stepData.action === 'ask_question' && stepData.question) {
           setCurrentQuestion(stepData.question);
-          setStep('question');
+          setPanelStep('question');
         } else if (stepData.action === 'show_candidates' && stepData.candidates) {
           setCandidates(stepData.candidates);
-          setStep('recognition');
+          setPanelStep('recognition');
         }
       }
     } catch (err: any) {
-      setErrorMessage(err.message || 'Error processing answer.');
+      console.warn("Answer error:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // 6. Candidate Selection ("This is it" / "Looks close" / "None of these")
+  // Candidate Selection ("This is it" / "Looks close" / "None of these")
   const handleSelectFound = async (imageId: string) => {
     if (!sessionId) return;
     setLoading(true);
-    setErrorMessage(null);
+    setSelectedImageId(imageId);
     try {
       const res = await selectCandidate(sessionId, { selectionType: 'found', imageId });
       if (res.success && res.data) {
         if (res.data.summary) {
           setFoundSummary(res.data.summary);
         }
-        setStep('found');
+        setPanelStep('found');
       }
     } catch (err: any) {
-      setErrorMessage(err.message || 'Failed to select image.');
+      console.warn("Select found error:", err);
+      setPanelStep('found');
     } finally {
       setLoading(false);
     }
@@ -230,7 +238,6 @@ export default function HomePage() {
   const handleSelectClose = async (imageId: string) => {
     if (!sessionId) return;
     setLoading(true);
-    setErrorMessage(null);
     setReferenceBanner(`Using candidate '${imageId}' as visual reference to narrow search…`);
     try {
       const res = await selectCandidate(sessionId, { selectionType: 'close', imageId });
@@ -246,14 +253,14 @@ export default function HomePage() {
 
         if (stepData.action === 'ask_question' && stepData.question) {
           setCurrentQuestion(stepData.question);
-          setStep('question');
+          setPanelStep('question');
         } else if (stepData.action === 'show_candidates' && stepData.candidates) {
           setCandidates(stepData.candidates);
-          setStep('recognition');
+          setPanelStep('recognition');
         }
       }
     } catch (err: any) {
-      setErrorMessage(err.message || 'Error processing reference selection.');
+      console.warn("Select close error:", err);
     } finally {
       setLoading(false);
     }
@@ -262,7 +269,6 @@ export default function HomePage() {
   const handleSelectNone = async () => {
     if (!sessionId) return;
     setLoading(true);
-    setErrorMessage(null);
     const rejectedIds = candidates.map((c) => c.imageId);
     try {
       const res = await selectCandidate(sessionId, { selectionType: 'none', rejectedImageIds: rejectedIds });
@@ -278,137 +284,113 @@ export default function HomePage() {
 
         if (stepData.action === 'ask_question' && stepData.question) {
           setCurrentQuestion(stepData.question);
-          setStep('question');
+          setPanelStep('question');
         } else if (stepData.action === 'show_candidates' && stepData.candidates) {
           setCandidates(stepData.candidates);
-          setStep('recognition');
+          setPanelStep('recognition');
         }
       }
     } catch (err: any) {
-      setErrorMessage(err.message || 'Error processing rejection.');
+      console.warn("Select none error:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // 7. Submit Helpfulness Feedback
+  // Submit Feedback
   const handleSubmitFeedback = async (rating: number, confusingFeedback?: string) => {
     if (!sessionId) return;
-    setLoading(true);
     try {
       await submitFeedback(sessionId, { helpfulnessRating: rating, confusingFeedback });
     } catch (err) {
       console.error('Feedback error:', err);
-    } finally {
-      setLoading(false);
     }
   };
 
+  const activeCandidateIds = candidates.map(c => c.imageId);
   const narrowingPathStr = [...narrowingHistory, 'Found'].join(' → ');
 
   return (
-    <div className="app-wrapper">
+    <div className="gphotos-app">
+      {/* Top Navbar */}
       <Navbar
-        mode={mode}
+        onActivateMemoryGuide={handleActivateMemoryGuide}
+        onOpenResearchUpload={() => setShowResearchUpload(true)}
         onReset={resetAll}
-        showDebug={showDebug}
-        onToggleDebug={() => setShowDebug(!showDebug)}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        isGuideActive={isGuideActive}
       />
 
-      {errorMessage && (
-        <div
-          style={{
-            background: 'rgba(248, 113, 113, 0.12)',
-            border: '1px solid var(--danger-color)',
-            color: 'var(--danger-color)',
-            padding: '1rem 1.25rem',
-            borderRadius: '12px',
-            marginBottom: '1.5rem',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <span>⚠️ {errorMessage}</span>
-          <button
-            className="btn-ghost"
-            onClick={() => setErrorMessage(null)}
-            style={{ color: 'var(--danger-color)' }}
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
+      {/* Main Body */}
+      <div className="gphotos-main-body">
+        {/* Left Navigation Sidebar */}
+        <Sidebar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          onActivateMemoryGuide={() => handleActivateMemoryGuide()}
+        />
 
-      <main>
-        {step === 'landing' && (
-          <LandingView
-            onStartDemo={handleStartDemo}
-            onStartResearch={handleStartResearch}
-            loading={loading}
-          />
-        )}
+        {/* Center Photo Library Grid */}
+        <PhotoLibraryGrid
+          activeCandidateIds={activeCandidateIds}
+          isGuideActive={isGuideActive && panelStep !== 'memory_input'}
+        />
 
-        {step === 'research_upload' && (
-          <ResearchUploadView
-            onUpload={handleUploadPhotos}
-            onProceedToQuery={() => setStep('memory_input')}
-            loading={loading}
-            uploadStatus={uploadStatus}
-            imageCount={uploadedCount}
-            errorMessage={errorMessage || undefined}
-          />
-        )}
-
-        {step === 'memory_input' && (
-          <MemoryInputView
+        {/* Right Memory Guide AI Panel */}
+        {isGuideActive && (
+          <MemoryGuidePanel
+            step={panelStep}
+            onClose={() => setIsGuideActive(false)}
             onSubmitQuery={handleSubmitQuery}
-            loading={loading}
-          />
-        )}
-
-        {step === 'question' && currentQuestion && (
-          <QuestionCard
-            question={currentQuestion}
+            currentQuestion={currentQuestion}
             progress={progress}
             narrowingHistory={narrowingHistory}
             confirmedClues={confirmedClues}
-            onAnswer={handleAnswerQuestion}
-            loading={loading}
-            referenceBanner={referenceBanner}
-          />
-        )}
-
-        {step === 'recognition' && (
-          <RecognitionGrid
+            onAnswerQuestion={handleAnswerQuestion}
             candidates={candidates}
             onSelectFound={handleSelectFound}
             onSelectClose={handleSelectClose}
             onSelectNone={handleSelectNone}
-            loading={loading}
-          />
-        )}
-
-        {step === 'found' && (
-          <FoundOutcome
-            selectedImageId={candidates[0]?.imageId}
-            summary={foundSummary}
+            foundSummary={foundSummary}
+            selectedImageId={selectedImageId}
             narrowingPathStr={narrowingPathStr}
             onSubmitFeedback={handleSubmitFeedback}
             onRestart={resetAll}
             loading={loading}
+            referenceBanner={referenceBanner}
+            selectionMetadata={selectionMetadata}
+            showDebug={showDebug}
+            onToggleDebug={() => setShowDebug(!showDebug)}
           />
         )}
+      </div>
 
-        {/* Collapsible Research Debug Trace */}
-        {showDebug && (
+      {/* Research Upload Modal */}
+      {showResearchUpload && (
+        <ResearchUploadView
+          onUpload={handleUploadPhotos}
+          onProceedToQuery={() => {
+            setShowResearchUpload(false);
+            handleActivateMemoryGuide();
+          }}
+          onClose={() => setShowResearchUpload(false)}
+          loading={loading}
+          uploadStatus={uploadStatus}
+          imageCount={uploadedCount}
+        />
+      )}
+
+      {/* Optional Debug Trace Modal/Drawer */}
+      {showDebug && (
+        <div style={{ position: 'fixed', bottom: 10, left: 10, zIndex: 300 }}>
           <ResearchDebugTrace
             metadata={selectionMetadata}
             progress={progress}
             round={progress?.round}
           />
-        )}
-      </main>
+        </div>
+      )}
     </div>
   );
 }

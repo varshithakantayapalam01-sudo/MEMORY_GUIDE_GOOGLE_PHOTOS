@@ -1,42 +1,99 @@
 'use client';
 
+import React from 'react';
+
 interface NavbarProps {
-  mode: 'demo' | 'research' | null;
+  onActivateMemoryGuide: (query?: string) => void;
+  onOpenResearchUpload: () => void;
   onReset: () => void;
-  showDebug: boolean;
-  onToggleDebug: () => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  isGuideActive: boolean;
 }
 
-export default function Navbar({ mode, onReset, showDebug, onToggleDebug }: NavbarProps) {
+export default function Navbar({
+  onActivateMemoryGuide,
+  onOpenResearchUpload,
+  onReset,
+  searchQuery,
+  setSearchQuery,
+  isGuideActive,
+}: NavbarProps) {
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      onActivateMemoryGuide(searchQuery.trim());
+    }
+  };
+
   return (
-    <header className="app-header">
-      <div className="logo-group" onClick={onReset} style={{ cursor: 'pointer' }}>
-        <div className="logo-icon">M</div>
-        <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+    <header className="gphotos-header">
+      <div className="gphotos-header-left">
+        <div className="gphotos-logo" onClick={onReset} style={{ cursor: 'pointer' }}>
+          {/* Google Photos Pinwheel SVG Icon */}
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2C12 6.42 8.42 10 4 10C8.42 10 12 13.58 12 18C12 13.58 15.58 10 20 10C15.58 10 12 6.42 12 2Z" fill="#EA4335"/>
+            <path d="M2 12C6.42 12 10 8.42 10 4C10 8.42 13.58 12 18 12C13.58 12 10 15.58 10 20C10 15.58 6.42 12 2 12Z" fill="#4285F4"/>
+            <path d="M12 22C12 17.58 15.58 14 20 14C15.58 14 12 10.42 12 6C12 10.42 8.42 14 4 14C8.42 14 12 17.58 12 22Z" fill="#FBBC05"/>
+            <path d="M22 12C17.58 12 14 15.58 14 20C14 15.58 10.42 12 6 12C10.42 12 14 8.42 14 4C14 8.42 17.58 12 22 12Z" fill="#34A853"/>
+          </svg>
+          <span>Photos</span>
+        </div>
+        <span className="concept-badge">Google Photos • Core Experience Concept</span>
+      </div>
+
+      <div className="gphotos-search-container">
+        <div className={`gphotos-search-bar ${isGuideActive ? 'active' : ''}`}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5F6368" strokeWidth="2">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            type="text"
+            className="gphotos-search-input"
+            placeholder="Search your photos"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onFocus={() => {
+              if (!isGuideActive) onActivateMemoryGuide();
+            }}
+          />
+          <button
+            type="button"
+            className="memory-guide-chip-btn"
+            onClick={() => onActivateMemoryGuide(searchQuery)}
+          >
+            <span>✨</span>
             <span>Memory Guide</span>
-            {mode && <span className="mode-badge">{mode.toUpperCase()} MODE</span>}
-          </div>
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-            Google Photos • Core Experience Concept
-          </span>
+          </button>
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <button
-          className="btn-ghost"
-          onClick={onToggleDebug}
-          title="Toggle research debug metrics"
-          style={{ fontSize: '0.8rem', opacity: showDebug ? 1 : 0.6 }}
+          className="btn-secondary"
+          onClick={onOpenResearchUpload}
+          style={{ fontSize: '13px', padding: '6px 14px', borderRadius: '18px' }}
         >
-          {showDebug ? '🐛 Debug ON' : '🐛 Debug OFF'}
+          + Add your photos
         </button>
-        {mode && (
-          <button className="btn-secondary" onClick={onReset} style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }}>
-            New Search
-          </button>
-        )}
+        <div
+          style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #1A73E8, #34A853)',
+            color: '#FFFFFF',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 600,
+            fontSize: '14px',
+          }}
+        >
+          P
+        </div>
       </div>
     </header>
   );

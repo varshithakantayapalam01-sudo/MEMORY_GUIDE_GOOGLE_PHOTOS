@@ -1,5 +1,6 @@
 'use client';
 
+import React, { useState } from 'react';
 import { CandidateData } from '@/lib/api';
 
 interface RecognitionGridProps {
@@ -10,16 +11,6 @@ interface RecognitionGridProps {
   loading: boolean;
 }
 
-const getFullImageUrl = (url: string) => {
-  if (!url) return '';
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
-    return url;
-  }
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://memoryguidegooglephotos-production.up.railway.app/api/v1';
-  const origin = apiBase.replace(/\/api\/v1\/?$/, '');
-  return `${origin}${url.startsWith('/') ? '' : '/'}${url}`;
-};
-
 export default function RecognitionGrid({
   candidates,
   onSelectFound,
@@ -27,98 +18,120 @@ export default function RecognitionGrid({
   onSelectNone,
   loading,
 }: RecognitionGridProps) {
+  const [noneClickedMessage, setNoneClickedMessage] = useState<string | null>(null);
+
+  const handleNoneClick = async () => {
+    setNoneClickedMessage("Okay — I'll keep looking.");
+    await onSelectNone();
+  };
+
   return (
-    <div className="card-container" style={{ maxWidth: '900px' }}>
-      <div className="recognition-header">
-        <h2 className="section-title">Is one of these the photo you remember?</h2>
-        <p className="subtitle" style={{ margin: '0 auto 1.5rem auto' }}>
-          Select the matching photo, choose one that looks close as a reference, or let Memory Guide keep searching.
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '16px', borderRadius: '16px' }}>
+        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0F172A', marginBottom: '4px' }}>
+          Do you recognize it?
+        </h3>
+        <p style={{ fontSize: '13px', color: '#64748B' }}>
+          Memory Guide narrowed your library to these remaining candidates.
         </p>
       </div>
 
-      {loading && (
-        <div className="loading-container" style={{ marginBottom: '1.5rem' }}>
-          <div className="spinner" />
-          <p className="loading-text">Finding the closest matches…</p>
+      {noneClickedMessage && (
+        <div style={{
+          background: '#FEF3C7',
+          border: '1px solid #FCD34D',
+          color: '#92400E',
+          padding: '10px 14px',
+          borderRadius: '12px',
+          fontSize: '13px',
+          fontWeight: 500
+        }}>
+          🔍 {noneClickedMessage}
         </div>
       )}
 
-      <div className="photo-grid">
-        {candidates.map((cand, idx) => (
-          <div key={cand.imageId} className="photo-card" id={`photo-card-${cand.imageId}`}>
-            <div className="photo-img-wrapper">
+      {/* 2-3 column candidate photo grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+        gap: '12px'
+      }}>
+        {candidates.map((candidate) => (
+          <div
+            key={candidate.imageId}
+            style={{
+              background: '#FFFFFF',
+              border: '1px solid #E2E8F0',
+              borderRadius: '12px',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.04)'
+            }}
+          >
+            <div style={{ aspectRatio: '1/1', overflow: 'hidden', background: '#F1F5F9' }}>
               <img
-                src={getFullImageUrl(cand.imageUrl)}
-                alt={`Candidate photo ${idx + 1}`}
-                className="photo-img"
+                src={candidate.imageUrl}
+                alt={`Candidate ${candidate.imageId}`}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 onError={(e) => {
-                  // Fallback for broken images or demo paths
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  const parent = target.parentElement;
-                  if (parent) {
-                    const fallback = document.createElement('div');
-                    fallback.className = 'photo-fallback';
-                    fallback.innerHTML = `<span>📷 Candidate Photo #${idx + 1}</span><span style="font-size:0.75rem;opacity:0.7;">(${cand.imageId})</span>`;
-                    parent.appendChild(fallback);
-                  }
+                  (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${candidate.imageId}/300/300`;
                 }}
               />
             </div>
-
-            <div className="photo-body">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                  Photo #{idx + 1}
-                </span>
-                <span
-                  style={{
-                    fontSize: '0.75rem',
-                    background: 'var(--accent-glow)',
-                    color: 'var(--accent-color)',
-                    padding: '0.15rem 0.5rem',
-                    borderRadius: '4px',
-                    fontWeight: 600,
-                  }}
-                >
-                  Score: {(cand.score * 100).toFixed(0)}%
-                </span>
-              </div>
-
-              <div className="photo-actions">
-                <button
-                  className="btn-card-found"
-                  onClick={() => onSelectFound(cand.imageId)}
-                  disabled={loading}
-                  id={`select-found-${cand.imageId}`}
-                >
-                  ✓ This is it
-                </button>
-                <button
-                  className="btn-card-close"
-                  onClick={() => onSelectClose(cand.imageId)}
-                  disabled={loading}
-                  id={`select-close-${cand.imageId}`}
-                >
-                  🔍 This looks close
-                </button>
-              </div>
+            <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <button
+                className="btn-primary"
+                style={{ width: '100%', padding: '6px', fontSize: '12px', borderRadius: '8px', justifyContent: 'center' }}
+                onClick={() => onSelectFound(candidate.imageId)}
+                disabled={loading}
+              >
+                This is it
+              </button>
+              <button
+                className="btn-secondary"
+                style={{ width: '100%', padding: '6px', fontSize: '11px', borderRadius: '8px', justifyContent: 'center' }}
+                onClick={() => onSelectClose(candidate.imageId)}
+                disabled={loading}
+              >
+                Looks close
+              </button>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="none-bar">
-        <button
-          className="btn-secondary"
-          onClick={onSelectNone}
-          disabled={loading}
-          style={{ width: '100%', maxWidth: '320px', padding: '0.85rem 1.5rem' }}
-          id="select-none-btn"
-        >
-          ❌ None of these
-        </button>
-      </div>
+      <button
+        className="btn-ghost"
+        style={{
+          width: '100%',
+          padding: '12px',
+          border: '1px dashed #CBD5E1',
+          borderRadius: '12px',
+          color: '#64748B',
+          fontSize: '13px',
+          fontWeight: 500,
+          marginTop: '4px'
+        }}
+        onClick={handleNoneClick}
+        disabled={loading}
+      >
+        None of these
+      </button>
+
+      {loading && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', padding: '12px', color: '#64748B', fontSize: '13px' }}>
+          <div style={{
+            width: '18px',
+            height: '18px',
+            border: '2px solid #CBD5E1',
+            borderTopColor: '#1A73E8',
+            borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite'
+          }} />
+          <span>Updating candidates…</span>
+        </div>
+      )}
     </div>
   );
 }
