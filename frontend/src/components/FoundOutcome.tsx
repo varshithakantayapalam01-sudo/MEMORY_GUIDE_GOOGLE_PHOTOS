@@ -29,7 +29,7 @@ export default function FoundOutcome({
   const [feedbackRating, setFeedbackRating] = useState<number | null>(null);
 
   const targetPhoto = DEMO_PHOTOS.find(p => p.image_id === selectedImageId) || DEMO_PHOTOS[0];
-  const questionsAsked = summary?.questionsAsked || ["Was a cake visible in the photo?", "Was it indoors or outdoors?"];
+  const questionsAsked = summary?.questionsAsked || ["Were you with a group of people, or was it a solo/pair photo?", "Was this outdoors or indoors?"];
   const totalRounds = summary?.totalRounds || 2;
 
   const handleRating = (rating: number) => {
@@ -51,7 +51,7 @@ export default function FoundOutcome({
           Found it ✨
         </h2>
         <p style={{ fontSize: '13px', opacity: 0.9 }}>
-          {totalRounds} questions • {summary?.candidateNarrowingPath ? 'Target located' : '4 photos remaining'}
+          {totalRounds} questions • Target located
         </p>
       </div>
 
@@ -82,28 +82,48 @@ export default function FoundOutcome({
 
       {/* How Memory Guide Found It - Retrieval Trace */}
       <div style={{
-        background: '#F8FAFC',
-        border: '1px solid #E2E8F0',
-        borderRadius: '14px',
-        padding: '16px'
+        background: 'linear-gradient(180deg, #F8FAFC 0%, #EFF6FF 100%)',
+        border: '1px solid #BFDBFE',
+        borderRadius: '16px',
+        padding: '18px'
       }}>
-        <h4 style={{ fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '10px' }}>
-          How Memory Guide found it:
-        </h4>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#64748B' }}>
-            <span style={{ background: '#CBD5E1', color: '#1E293B', padding: '2px 8px', borderRadius: '10px', fontWeight: 600 }}>1</span>
-            <span>29 photos → 12 possible</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+          <span style={{ fontSize: '16px' }}>✨</span>
+          <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#1E40AF' }}>
+            How Memory Guide found it
+          </h4>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#475569' }}>
+            <span style={{ background: '#DBEAFE', color: '#1E40AF', padding: '2px 8px', borderRadius: '10px', fontWeight: 600, fontSize: '11px' }}>START</span>
+            <span>29 photos in library</span>
           </div>
+
+          <div style={{ color: '#94A3B8', paddingLeft: '14px', fontSize: '11px' }}>↓</div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1E293B', fontWeight: 600 }}>
+            <span style={{ background: '#E0F2FE', color: '#0369A1', padding: '2px 8px', borderRadius: '10px', fontSize: '11px' }}>QUERY</span>
+            <span>12 possible photos</span>
+          </div>
+
           {questionsAsked.map((q, idx) => (
-            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#64748B' }}>
-              <span style={{ background: '#E2E8F0', color: '#1A73E8', padding: '2px 8px', borderRadius: '10px', fontWeight: 600 }}>{idx + 2}</span>
-              <span>{q} ({idx === 0 ? '12 → 7' : '7 → 4'})</span>
-            </div>
+            <React.Fragment key={idx}>
+              <div style={{ color: '#94A3B8', paddingLeft: '14px', fontSize: '11px' }}>↓</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', background: '#FFFFFF', padding: '8px 12px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 500 }}>"{q}"</span>
+                <span style={{ fontSize: '12px', color: '#1A73E8', fontWeight: 700 }}>
+                  {idx === 0 ? '12 → 7 possible' : '7 → 4 possible'}
+                </span>
+              </div>
+            </React.Fragment>
           ))}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#10B981', fontWeight: 600 }}>
-            <span style={{ background: '#D1FAE5', color: '#047857', padding: '2px 8px', borderRadius: '10px' }}>✓</span>
-            <span>Recognized & confirmed</span>
+
+          <div style={{ color: '#94A3B8', paddingLeft: '14px', fontSize: '11px' }}>↓</div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#065F46', background: '#D1FAE5', padding: '8px 12px', borderRadius: '10px', fontWeight: 700 }}>
+            <span>Found ✓</span>
+            <span style={{ fontSize: '11px', fontWeight: 500, color: '#047857' }}>(Target recognized)</span>
           </div>
         </div>
       </div>
@@ -133,7 +153,7 @@ export default function FoundOutcome({
         {showExplanation && (
           <div style={{ padding: '16px', fontSize: '13px', color: '#475569', lineHeight: 1.5, background: '#FFFFFF' }}>
             <p style={{ marginBottom: showDebug ? '12px' : 0 }}>
-              Among the remaining photos, cake visibility and location setting were the strongest features to separate candidate options cleanly.
+              Among the remaining photos, cake visibility and group/solo setting were the strongest features to separate candidate options cleanly.
             </p>
             {showDebug && selectionMetadata && (
               <div style={{

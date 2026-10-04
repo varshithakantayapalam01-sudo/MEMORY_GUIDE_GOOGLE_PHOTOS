@@ -43,30 +43,47 @@ export default function Navbar({
       </div>
 
       <div className="gphotos-search-container">
-        <div className={`gphotos-search-bar ${isGuideActive ? 'active' : ''}`}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5F6368" strokeWidth="2">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input
-            type="text"
-            className="gphotos-search-input"
-            placeholder="Search your photos"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onFocus={() => {
-              if (!isGuideActive) onActivateMemoryGuide();
-            }}
-          />
-          <button
-            type="button"
-            className="memory-guide-chip-btn"
-            onClick={() => onActivateMemoryGuide(searchQuery)}
-          >
+        <div style={{ position: 'relative', width: '100%' }}>
+          <div className={`gphotos-search-bar ${isGuideActive ? 'active' : ''}`}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5F6368" strokeWidth="2">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input
+              type="text"
+              className="gphotos-search-input"
+              placeholder="Search your photos"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onFocus={() => {
+                if (!isGuideActive) onActivateMemoryGuide();
+              }}
+            />
+            <button
+              type="button"
+              className="memory-guide-chip-btn"
+              onClick={() => onActivateMemoryGuide(searchQuery)}
+            >
+              <span>✨</span>
+              <span>Memory Guide</span>
+            </button>
+          </div>
+          <div style={{
+            position: 'absolute',
+            top: '50px',
+            left: '16px',
+            fontSize: '11px',
+            color: '#1A73E8',
+            fontWeight: 500,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            whiteSpace: 'nowrap'
+          }}>
             <span>✨</span>
-            <span>Memory Guide</span>
-          </button>
+            <span>Can't remember the exact words? Describe what you remember.</span>
+          </div>
         </div>
       </div>
 
